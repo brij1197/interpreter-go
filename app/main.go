@@ -21,12 +21,12 @@ func main() {
 	}
 
 	filename := os.Args[2]
-	fileContents, err := os.ReadFile(filename)
+	file, err := os.ReadFile(filename)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error reading file: %v\n", err)
 		os.Exit(1)
 	}
 
-	fileContents = string(fileContents)
+	fileContents := string(file)
 	scanTokens(fileContents)
 }
