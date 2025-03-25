@@ -27,9 +27,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	if len(fileContents) > 0 {
-		panic("Scanner not implemented")
-	} else {
-		fmt.Println("EOF  null")
-	}
+	fileContents := string(rawfileContents)
+	scanTokens(fileContents)
 }
