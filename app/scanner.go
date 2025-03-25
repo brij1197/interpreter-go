@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 const (
 	LEFT_PAREN rune = '('
 	RIGHT_PAREN rune = ')'
