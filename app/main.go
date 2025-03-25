@@ -27,6 +27,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	fileContents := string(fileContents)
+	fileContents = string(fileContents)
 	scanTokens(fileContents)
 }
