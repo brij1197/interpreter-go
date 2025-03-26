@@ -27,6 +27,7 @@ const (
 )
 
 func scanTokens(fileContents string) bool {
+	line := 1
 	hasError := false
 	runes := []rune(fileContents)
 	for i := 0; i < len(runes); i++ {
@@ -88,10 +89,12 @@ func scanTokens(fileContents string) bool {
 			} else {
 				fmt.Println("SLASH / null")
 			}
-		case SPACE, TAB, NEWLINE:
+		case NEWLINE:
+			line++
+		case SPACE, TAB:
 			continue
 		default:
-			fmt.Fprintf(os.Stderr, "[line 1] Error: Unexpected character: %c\n", current)
+			fmt.Fprintf(os.Stderr, "[line %d] Error: Unexpected character: %c\n", line, current)
 			hasError = true
 		}
 	}
