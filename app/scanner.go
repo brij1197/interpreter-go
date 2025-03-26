@@ -16,11 +16,14 @@ const (
 	PLUS        rune = '+'
 	SEMICOLON   rune = ';'
 	STAR        rune = '*'
+	EQUAL       rune = '='
 )
 
 func scanTokens(fileContents string) bool {
 	hasError := false
-	for _, current := range fileContents {
+	runes := []rune(fileContents)
+	for i := 0; i < len(runes); i++ {
+		current := runes[i]
 		switch current {
 		case LEFT_PAREN:
 			fmt.Println("LEFT_PAREN ( null")
@@ -42,6 +45,13 @@ func scanTokens(fileContents string) bool {
 			fmt.Println("SEMICOLON ; null")
 		case STAR:
 			fmt.Println("STAR * null")
+		case EQUAL:
+			if i+1 < len(runes) && runes[i+1] == '=' {
+				fmt.Println("EQUAL_EQUAL == null")
+				i++
+			} else {
+				fmt.Println("EQUAL = null")
+			}
 		default:
 			fmt.Fprintf(os.Stderr, "[line 1] Error: Unexpected character: %c\n", current)
 			hasError = true
