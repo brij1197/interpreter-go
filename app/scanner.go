@@ -24,6 +24,7 @@ const (
 	SPACE       rune = ' '
 	TAB         rune = '\t'
 	NEWLINE     rune = '\n'
+	QUOTE       rune = '"'
 )
 
 func scanTokens(fileContents string) bool {
@@ -94,6 +95,19 @@ func scanTokens(fileContents string) bool {
 			} else {
 				tokens = append(tokens, "SLASH / null")
 			}
+		case QUOTE:
+			start := i + 1
+			i++
+			for i < len(runes) && runes[i] != QUOTE && runes[i] != NEWLINE {
+				i++
+			}
+			if i >= len(runes) || runes[i] != QUOTE {
+				errors = append(errors, fmt.Sprintf("[line %d] Error: Unterminated string", line))
+				hasError = true
+				break
+			}
+			value := string(runes[start:i])
+			tokens = append(tokens, fmt.Sprintf("STRING \"%s\" %s", value, value))
 		case NEWLINE:
 			line++
 		case SPACE, TAB:
