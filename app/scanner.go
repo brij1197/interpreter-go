@@ -17,6 +17,7 @@ const (
 	SEMICOLON   rune = ';'
 	STAR        rune = '*'
 	EQUAL       rune = '='
+	BANG        rune = '!'
 )
 
 func scanTokens(fileContents string) bool {
@@ -45,6 +46,13 @@ func scanTokens(fileContents string) bool {
 			fmt.Println("SEMICOLON ; null")
 		case STAR:
 			fmt.Println("STAR * null")
+		case BANG:
+			if i+1 < len(runes) && runes[i+1] == '=' {
+				fmt.Println("BANG_EQUAL != null")
+				i++
+			} else {
+				fmt.Println("BANG ! null")
+			}
 		case EQUAL:
 			if i+1 < len(runes) && runes[i+1] == '=' {
 				fmt.Println("EQUAL_EQUAL == null")
