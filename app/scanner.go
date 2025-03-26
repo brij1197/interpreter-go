@@ -21,6 +21,9 @@ const (
 	LESS        rune = '<'
 	GREATER     rune = '>'
 	SLASH       rune = '/'
+	SPACE       rune = ' '
+	TAB         rune = '\t'
+	NEWLINE     rune = '\n'
 )
 
 func scanTokens(fileContents string) bool {
@@ -85,6 +88,8 @@ func scanTokens(fileContents string) bool {
 			} else {
 				fmt.Println("SLASH / null")
 			}
+		case SPACE, TAB, NEWLINE:
+			continue
 		default:
 			fmt.Fprintf(os.Stderr, "[line 1] Error: Unexpected character: %c\n", current)
 			hasError = true
