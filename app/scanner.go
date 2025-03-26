@@ -92,6 +92,9 @@ func scanTokens(fileContents string) bool {
 					}
 					i++
 				}
+				if i < len(runes) {
+					i++
+				}
 			} else {
 				fmt.Println("SLASH / null")
 			}
