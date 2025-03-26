@@ -102,7 +102,7 @@ func scanTokens(fileContents string) bool {
 				i++
 			}
 			if i >= len(runes) || runes[i] != QUOTE {
-				errors = append(errors, fmt.Sprintf("[line %d] Error: Unterminated string", line))
+				errors = append(errors, fmt.Sprintf("[line %d] Error: Unterminated string.", line))
 				hasError = true
 				break
 			}
