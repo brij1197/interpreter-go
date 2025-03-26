@@ -20,6 +20,7 @@ const (
 	BANG        rune = '!'
 	LESS        rune = '<'
 	GREATER     rune = '>'
+	SLASH       rune = '/'
 )
 
 func scanTokens(fileContents string) bool {
@@ -75,6 +76,14 @@ func scanTokens(fileContents string) bool {
 				i++
 			} else {
 				fmt.Println("GREATER > null")
+			}
+		case SLASH:
+			if i+1 < len(runes) && runes[i+1] == '/' {
+				for i < len(runes) && runes[i] != '\n' {
+					i++
+				}
+			} else {
+				fmt.Println("SLASH / null")
 			}
 		default:
 			fmt.Fprintf(os.Stderr, "[line 1] Error: Unexpected character: %c\n", current)
