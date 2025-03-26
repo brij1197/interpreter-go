@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"os"
+)
 
 const (
 	LEFT_PAREN  rune = '('
@@ -15,7 +18,8 @@ const (
 	STAR        rune = '*'
 )
 
-func scanTokens(fileContents string) {
+func scanTokens(fileContents string) bool {
+	hasError := false
 	for _, current := range fileContents {
 		switch current {
 		case LEFT_PAREN:
@@ -38,7 +42,11 @@ func scanTokens(fileContents string) {
 			fmt.Println("SEMICOLON ; null")
 		case STAR:
 			fmt.Println("STAR * null")
+		default:
+			fmt.Fprintf(os.Stderr, "[line 1] Error: Unexpected character: %c\n", current)
+			hasError = true
 		}
 	}
 	fmt.Println("EOF  null")
+	return hasError
 }

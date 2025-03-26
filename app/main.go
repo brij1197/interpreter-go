@@ -28,5 +28,8 @@ func main() {
 	}
 
 	fileContents := string(file)
-	scanTokens(fileContents)
+	hasError := scanTokens(fileContents)
+	if hasError {
+		os.Exit(65)
+	}
 }
