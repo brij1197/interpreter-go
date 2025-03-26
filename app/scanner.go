@@ -88,6 +88,7 @@ func scanTokens(fileContents string) bool {
 						break
 					}
 					if runes[i] == '\n' {
+						line++
 						break
 					}
 					i++
