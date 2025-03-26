@@ -86,10 +86,6 @@ func scanTokens(fileContents string) bool {
 				for i < len(runes) && runes[i] != '\n' {
 					i++
 				}
-				if i < len(runes) {
-					i++
-					line++
-				}
 			} else {
 				fmt.Println("SLASH / null")
 			}
