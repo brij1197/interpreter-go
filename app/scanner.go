@@ -18,6 +18,8 @@ const (
 	STAR        rune = '*'
 	EQUAL       rune = '='
 	BANG        rune = '!'
+	LESS        rune = '<'
+	GREATER     rune = '>'
 )
 
 func scanTokens(fileContents string) bool {
@@ -59,6 +61,20 @@ func scanTokens(fileContents string) bool {
 				i++
 			} else {
 				fmt.Println("EQUAL = null")
+			}
+		case LESS:
+			if i+1 < len(runes) && runes[i+1] == '=' {
+				fmt.Println("LESS_EQUAL <= null")
+				i++
+			} else {
+				fmt.Println("LESS < null")
+			}
+		case GREATER:
+			if i+1 < len(runes) && runes[i+1] == '=' {
+				fmt.Println("GREATER_EQUAL >= null")
+				i++
+			} else {
+				fmt.Println("GREATER > null")
 			}
 		default:
 			fmt.Fprintf(os.Stderr, "[line 1] Error: Unexpected character: %c\n", current)
