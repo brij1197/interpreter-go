@@ -30,56 +30,59 @@ func scanTokens(fileContents string) bool {
 	line := 1
 	hasError := false
 	runes := []rune(fileContents)
+	var errors []string
+	var tokens []string
+
 	for i := 0; i < len(runes); i++ {
 		current := runes[i]
 		switch current {
 		case LEFT_PAREN:
-			fmt.Println("LEFT_PAREN ( null")
+			tokens = append(tokens, "LEFT_PAREN ( null")
 		case RIGHT_PAREN:
-			fmt.Println("RIGHT_PAREN ) null")
+			tokens = append(tokens, "RIGHT_PAREN ) null")
 		case LEFT_BRACE:
-			fmt.Println("LEFT_BRACE { null")
+			tokens = append(tokens, "LEFT_BRACE { null")
 		case RIGHT_BRACE:
-			fmt.Println("RIGHT_BRACE } null")
+			tokens = append(tokens, "RIGHT_BRACE } null")
 		case COMMA:
-			fmt.Println("COMMA , null")
+			tokens = append(tokens, "COMMA , null")
 		case DOT:
-			fmt.Println("DOT . null")
+			tokens = append(tokens, "DOT . null")
 		case MINUS:
-			fmt.Println("MINUS - null")
+			tokens = append(tokens, "MINUS - null")
 		case PLUS:
-			fmt.Println("PLUS + null")
+			tokens = append(tokens, "PLUS + null")
 		case SEMICOLON:
-			fmt.Println("SEMICOLON ; null")
+			tokens = append(tokens, "SEMICOLON ; null")
 		case STAR:
-			fmt.Println("STAR * null")
+			tokens = append(tokens, "STAR * null")
 		case BANG:
 			if i+1 < len(runes) && runes[i+1] == '=' {
-				fmt.Println("BANG_EQUAL != null")
+				tokens = append(tokens, "BANG_EQUAL != null")
 				i++
 			} else {
-				fmt.Println("BANG ! null")
+				tokens = append(tokens, "BANG ! null")
 			}
 		case EQUAL:
 			if i+1 < len(runes) && runes[i+1] == '=' {
-				fmt.Println("EQUAL_EQUAL == null")
+				tokens = append(tokens, "EQUAL_EQUAL == null")
 				i++
 			} else {
-				fmt.Println("EQUAL = null")
+				tokens = append(tokens, "EQUAL = null")
 			}
 		case LESS:
 			if i+1 < len(runes) && runes[i+1] == '=' {
-				fmt.Println("LESS_EQUAL <= null")
+				tokens = append(tokens, "LESS_EQUAL <= null")
 				i++
 			} else {
-				fmt.Println("LESS < null")
+				tokens = append(tokens, "LESS < null")
 			}
 		case GREATER:
 			if i+1 < len(runes) && runes[i+1] == '=' {
-				fmt.Println("GREATER_EQUAL >= null")
+				tokens = append(tokens, "GREATER_EQUAL >= null")
 				i++
 			} else {
-				fmt.Println("GREATER > null")
+				tokens = append(tokens, "GREATER > null")
 			}
 		case SLASH:
 			if i+1 < len(runes) && runes[i+1] == '/' {
@@ -89,17 +92,26 @@ func scanTokens(fileContents string) bool {
 				}
 				i--
 			} else {
-				fmt.Println("SLASH / null")
+				tokens = append(tokens, "SLASH / null")
 			}
 		case NEWLINE:
 			line++
 		case SPACE, TAB:
 			continue
 		default:
-			fmt.Fprintf(os.Stderr, "[line %d] Error: Unexpected character: %c\n", line, current)
+			errors = append(errors, fmt.Sprintf("[line %d] Error: Unexpected character: %c", line, current))
 			hasError = true
 		}
 	}
+
+	for _, err := range errors {
+		fmt.Fprintln(os.Stderr, err)
+	}
+
+	for _, token := range tokens {
+		fmt.Println(token)
+	}
+
 	fmt.Println("EOF  null")
 	return hasError
 }
