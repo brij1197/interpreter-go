@@ -27,6 +27,19 @@ const (
 	QUOTE       rune = '"'
 )
 
+func isDigit(c rune) bool {
+	return c >= '0' && c <= '9'
+}
+
+func contains(s string, c rune) bool {
+	for _, char := range s {
+		if char == c {
+			return true
+		}
+	}
+	return false
+}
+
 func scanTokens(fileContents string) bool {
 	line := 1
 	hasError := false
@@ -112,6 +125,23 @@ func scanTokens(fileContents string) bool {
 			line++
 		case SPACE, TAB:
 			continue
+		case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
+			start := i
+			for i < len(runes) && isDigit(runes[i]) {
+				i++
+			}
+			if i < len(runes) && runes[i] == '.' && i+1 < len(runes) && isDigit(runes[i+1]) {
+				i++
+				for i < len(runes) && isDigit(runes[i]) {
+					i++
+				}
+			}
+			number := string(runes[start:i])
+			literalValue := number
+			if !contains(number, '.') {
+				literalValue += ".0"
+			}
+			tokens = append(tokens, fmt.Sprintf("NUMBER %s %s", number, literalValue))
 		default:
 			errors = append(errors, fmt.Sprintf("[line %d] Error: Unexpected character: %c", line, current))
 			hasError = true
