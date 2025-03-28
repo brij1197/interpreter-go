@@ -127,7 +127,7 @@ func scanTokens(fileContents string) bool {
 			continue
 		case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
 			start := i
-			for i+1 < len(runes) && isDigit(runes[i]) {
+			for i+1 < len(runes) && isDigit(runes[i+1]) {
 				i++
 			}
 			if i+1 < len(runes) && runes[i+1] == '.' {
