@@ -130,11 +130,16 @@ func scanTokens(fileContents string) bool {
 			for i+1 < len(runes) && isDigit(runes[i]) {
 				i++
 			}
-			if i+1 < len(runes) && runes[i+1] == '.' && i+2 < len(runes) && isDigit(runes[i+2]) {
+			if i+1 < len(runes) && runes[i+1] == '.' {
 				i++
-				for i+1 < len(runes) && isDigit(runes[i+1]) {
-					i++
+				if i+1 < len(runes) && isDigit(runes[i+1]) {
+					for i+1 < len(runes) && isDigit(runes[i+1]) {
+						i++
+					}
+				} else {
+					i--
 				}
+
 			}
 			number := string(runes[start : i+1])
 			literalValue := number
