@@ -25,20 +25,17 @@ func NewScanner(source string) *Scanner {
 }
 
 func (s *Scanner) ScanTokens() ([]Token, error) {
-	var scanError error
 	for !s.isAtEnd() {
 		s.start = s.current
 		err := s.scanToken()
 		if err != nil {
-			scanError = err
-			s.hadError = true
-			break
+			return s.tokens, err
 		}
 	}
 	if !s.hadError {
 		s.tokens = append(s.tokens, NewToken(EOF, "", nil, s.line))
 	}
-	return s.tokens, scanError
+	return s.tokens, nil
 }
 
 func (s *Scanner) string() error {
