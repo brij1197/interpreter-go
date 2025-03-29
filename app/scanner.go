@@ -28,6 +28,25 @@ const (
 	QUOTE       rune = '"'
 )
 
+var keywords = map[string]string{
+	"and":    "AND",
+	"class":  "CLASS",
+	"else":   "ELSE",
+	"false":  "FALSE",
+	"for":    "FOR",
+	"fun":    "FUN",
+	"if":     "IF",
+	"nil":    "NIL",
+	"or":     "OR",
+	"print":  "PRINT",
+	"return": "RETURN",
+	"super":  "SUPER",
+	"this":   "THIS",
+	"true":   "TRUE",
+	"var":    "VAR",
+	"while":  "WHILE",
+}
+
 func isDigit(c rune) bool {
 	return c >= '0' && c <= '9'
 }
@@ -174,7 +193,11 @@ func scanTokens(fileContents string) bool {
 					i++
 				}
 				identifier := string(runes[start : i+1])
-				tokens = append(tokens, fmt.Sprintf("IDENTIFIER %s null", identifier))
+				if tokenType, isKeyword := keywords[identifier]; isKeyword {
+					tokens = append(tokens, fmt.Sprintf("%s %s null", tokenType, identifier))
+				} else {
+					tokens = append(tokens, fmt.Sprintf("IDENTIFIER %s null", identifier))
+				}
 				continue
 			}
 			errors = append(errors, fmt.Sprintf("[line %d] Error: Unexpected character: %c", line, current))
