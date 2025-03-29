@@ -61,15 +61,12 @@ func (t Token) String() string {
 	var literalStr string
 	if t.Literal == nil {
 		literalStr = "null"
+	} else if num, ok := t.Literal.(float64); ok {
+		literalStr = fmt.Sprintf("%.1f", num)
+	} else if num, ok := t.Literal.(int); ok {
+		literalStr = fmt.Sprintf("%.1f", float64(num))
 	} else {
-		if t.Type == NUMBER {
-			num, ok := t.Literal.(float64)
-			if ok {
-				literalStr = fmt.Sprintf("%.1f", num)
-			}
-		} else {
-			literalStr = fmt.Sprintf("%v", t.Literal)
-		}
+		literalStr = fmt.Sprintf("%v", t.Literal)
 	}
 	return fmt.Sprintf("%s %s %s", t.Type, t.Lexeme, literalStr)
 }
