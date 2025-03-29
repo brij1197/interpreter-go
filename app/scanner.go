@@ -124,7 +124,7 @@ func (s *Scanner) scanToken() error {
 		} else if isAlpha(c) {
 			s.identifier()
 		} else {
-			return fmt.Errorf("[line %d] Error: Unexpected character.", s.line)
+			return fmt.Errorf("[line %d] Error: Unexpected character: %c", s.line, c)
 		}
 	}
 	return nil
