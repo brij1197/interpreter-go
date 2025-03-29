@@ -6,12 +6,12 @@ import (
 )
 
 type Scanner struct {
-	source   string
-	tokens   []Token
-	start    int
-	current  int
-	line     int
-	hadError bool
+	source  string
+	tokens  []Token
+	start   int
+	current int
+	line    int
+	errors  []error
 }
 
 func NewScanner(source string) *Scanner {
@@ -21,21 +21,18 @@ func NewScanner(source string) *Scanner {
 		start:   0,
 		current: 0,
 		line:    1,
+		errors:  make([]error, 0),
 	}
 }
 
-func (s *Scanner) ScanTokens() ([]Token, error) {
+func (s *Scanner) ScanTokens() ([]Token, []error) {
 	for !s.isAtEnd() {
 		s.start = s.current
-		err := s.scanToken()
-		if err != nil {
-			s.tokens = append(s.tokens, NewToken(EOF, "", nil, s.line))
-			return s.tokens, err
-		}
+		s.scanToken()
 	}
 
 	s.tokens = append(s.tokens, NewToken(EOF, "", nil, s.line))
-	return s.tokens, nil
+	return s.tokens, s.errors
 }
 
 func (s *Scanner) string() error {
@@ -124,7 +121,7 @@ func (s *Scanner) scanToken() error {
 		} else if isAlpha(c) {
 			s.identifier()
 		} else {
-			return fmt.Errorf("[line %d] Error: Unexpected character: %c", s.line, c)
+			s.errors = append(s.errors, fmt.Errorf("[line %d] Error: Unexpected character: %c", s.line, c))
 		}
 	}
 	return nil

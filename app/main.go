@@ -35,9 +35,11 @@ func main() {
 
 func runParse(source string) {
 	scanner := NewScanner(source)
-	tokens, err := scanner.ScanTokens()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %s\n", err)
+	tokens, scanErrors := scanner.ScanTokens()
+	if len(scanErrors) > 0 {
+		for _, err := range scanErrors {
+			fmt.Fprintln(os.Stderr, err)
+		}
 		os.Exit(65)
 	}
 	parser := NewParser(tokens)
@@ -52,7 +54,14 @@ func runParse(source string) {
 
 func runTokenize(source string) {
 	scanner := NewScanner(source)
-	tokens, err := scanner.ScanTokens()
+	tokens, errors := scanner.ScanTokens()
+
+	if len(errors) > 0 {
+		for _, err := range errors {
+			fmt.Fprintln(os.Stderr, err)
+		}
+		os.Exit(65)
+	}
 
 	for _, token := range tokens {
 		var literalStr string
@@ -75,10 +84,5 @@ func runTokenize(source string) {
 			literalStr = fmt.Sprintf("%v", token.Literal)
 		}
 		fmt.Printf("%s %s %s\n", token.Type, token.Lexeme, literalStr)
-	}
-
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(65)
 	}
 }
