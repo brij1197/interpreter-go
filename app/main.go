@@ -48,7 +48,11 @@ func runParse(source string) {
 
 func runTokenize(source string) {
 	scanner := NewScanner(source)
-	tokens := scanner.ScanTokens()
+	tokens, err := scanner.ScanTokens()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(65)
+	}
 	for _, token := range tokens {
 		var literalStr string
 		if token.Literal == nil {

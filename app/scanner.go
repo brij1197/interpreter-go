@@ -26,19 +26,36 @@ func NewScanner(source string) *Scanner {
 func (s *Scanner) ScanTokens() []Token {
 	for !s.isAtEnd() {
 		s.start = s.current
-		s.scanToken()
+		err := s.scanToken()
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	s.tokens = append(s.tokens, Token{
-		Type:    EOF,
-		Lexeme:  "",
-		Literal: nil,
-		Line:    s.line,
-	})
-	return s.tokens
+	s.tokens = append(s.tokens, NewToken(EOF, "", nil, s.line))
+	return s.tokens, nil
 }
 
-func (s *Scanner) scanToken() {
+func (s *Scanner) string() error {
+	for s.peek() != '"' && !s.isAtEnd() {
+		if s.peek() == '\n' {
+			s.line++
+		}
+		s.advance()
+	}
+
+	if s.isAtEnd() {
+		return fmt.Errorf("Unterminated string at line %d", s.line)
+	}
+
+	s.advance()
+
+	value := s.source[s.start+1 : s.current-1]
+	s.addToken(STRING, value)
+	return nil
+}
+
+func (s *Scanner) scanToken() error {
 	c := s.advance()
 	switch c {
 	case '(':
@@ -97,7 +114,7 @@ func (s *Scanner) scanToken() {
 	case '\n':
 		s.line++
 	case '"':
-		s.string()
+		return s.string()
 	default:
 		if isDigit(c) {
 			s.number()
@@ -107,6 +124,7 @@ func (s *Scanner) scanToken() {
 			fmt.Printf("Unexpected character at line %d\n", s.line)
 		}
 	}
+	return nil
 }
 
 func (s *Scanner) identifier() {
