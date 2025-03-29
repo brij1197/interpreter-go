@@ -113,6 +113,7 @@ func (s *Scanner) scanToken() error {
 			s.addToken(SLASH, nil)
 		}
 	case ' ', '\r', '\t':
+
 	case '\n':
 		s.line++
 	case '"':
@@ -123,7 +124,7 @@ func (s *Scanner) scanToken() error {
 		} else if isAlpha(c) {
 			s.identifier()
 		} else {
-			fmt.Printf("Unexpected character at line %d\n", s.line)
+			return fmt.Errorf("[line %d] Error: Unexpected character.", s.line)
 		}
 	}
 	return nil
