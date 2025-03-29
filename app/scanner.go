@@ -45,7 +45,7 @@ func (s *Scanner) string() error {
 	}
 
 	if s.isAtEnd() {
-		return fmt.Errorf("Unterminated string at line %d", s.line)
+		return fmt.Errorf("[line %d] Error: Unterminated string.", s.line)
 	}
 
 	s.advance()
