@@ -154,7 +154,8 @@ func (s *Scanner) number() {
 		}
 	}
 
-	value, _ := strconv.ParseFloat(s.source[s.start:s.current], 64)
+	number := s.source[s.start:s.current]
+	value, _ := strconv.ParseFloat(number, 64)
 	s.addToken(NUMBER, value)
 }
 
@@ -194,12 +195,7 @@ func (s *Scanner) advance() byte {
 
 func (s *Scanner) addToken(tokenType TokenType, literal interface{}) {
 	text := s.source[s.start:s.current]
-	s.tokens = append(s.tokens, Token{
-		Type:    tokenType,
-		Lexeme:  text,
-		Literal: literal,
-		Line:    s.line,
-	})
+	s.tokens = append(s.tokens, NewToken(tokenType, text, literal, s.line))
 }
 
 func isDigit(c byte) bool {
