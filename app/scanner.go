@@ -154,11 +154,7 @@ func (s *Scanner) number() {
 		}
 	}
 
-	value, err := strconv.ParseFloat(s.source[s.start:s.current], 64)
-	if err != nil {
-		fmt.Printf("Invalid number at line %d\n", s.line)
-		return
-	}
+	value, _ := strconv.ParseFloat(s.source[s.start:s.current], 64)
 	s.addToken(NUMBER, value)
 }
 

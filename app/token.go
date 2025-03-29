@@ -63,7 +63,10 @@ func (t Token) String() string {
 		literalStr = "null"
 	} else {
 		if t.Type == NUMBER {
-			literalStr = fmt.Sprintf("%.1f", t.Literal)
+			num, ok := t.Literal.(float64)
+			if ok {
+				literalStr = fmt.Sprintf("%.1f", num)
+			}
 		} else {
 			literalStr = fmt.Sprintf("%v", t.Literal)
 		}
