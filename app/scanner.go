@@ -28,7 +28,9 @@ func NewScanner(source string) *Scanner {
 func (s *Scanner) ScanTokens() ([]Token, []error) {
 	for !s.isAtEnd() {
 		s.start = s.current
-		s.scanToken()
+		if err := s.scanToken(); err != nil {
+			s.errors = append(s.errors, err)
+		}
 	}
 
 	s.tokens = append(s.tokens, NewToken(EOF, "", nil, s.line))
@@ -114,7 +116,9 @@ func (s *Scanner) scanToken() error {
 	case '\n':
 		s.line++
 	case '"':
-		return s.string()
+		if err := s.string(); err != nil {
+			return err
+		}
 	default:
 		if isDigit(c) {
 			s.number()
