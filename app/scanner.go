@@ -167,7 +167,7 @@ func scanTokens(fileContents string) bool {
 			literalValue := normalizeDecimal(number)
 			tokens = append(tokens, fmt.Sprintf("NUMBER %s %s", number, literalValue))
 
-		case c:
+		default:
 			if isAlpha(current) {
 				start := i
 				for i+1 < len(runes) && isAlphaNumeric(runes[i+1]) {
@@ -177,7 +177,6 @@ func scanTokens(fileContents string) bool {
 				tokens = append(tokens, fmt.Sprintf("IDENTIFIER %s null", identifier))
 				continue
 			}
-		default:
 			errors = append(errors, fmt.Sprintf("[line %d] Error: Unexpected character: %c", line, current))
 			hasError = true
 		}
