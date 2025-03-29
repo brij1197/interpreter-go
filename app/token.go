@@ -62,7 +62,11 @@ func (t Token) String() string {
 	if t.Literal == nil {
 		literalStr = "null"
 	} else {
-		literalStr = fmt.Sprintf("%v", t.Literal)
+		if t.Type == NUMBER {
+			literalStr = fmt.Sprintf("%.1f", t.Literal)
+		} else {
+			literalStr = fmt.Sprintf("%v", t.Literal)
+		}
 	}
 	return fmt.Sprintf("%s %s %s", t.Type, t.Lexeme, literalStr)
 }
