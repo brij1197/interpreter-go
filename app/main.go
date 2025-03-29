@@ -14,22 +14,48 @@ func main() {
 	}
 
 	command := os.Args[1]
-
-	if command != "tokenize" {
-		fmt.Fprintf(os.Stderr, "Unknown command: %s\n", command)
-		os.Exit(1)
-	}
-
 	filename := os.Args[2]
-	file, err := os.ReadFile(filename)
+
+	bytes, err := os.ReadFile(filename)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error reading file: %v\n", err)
 		os.Exit(1)
 	}
 
-	fileContents := string(file)
-	hasError := scanTokens(fileContents)
-	if hasError {
+	switch command {
+	case "tokenize":
+		runTokenize(string(bytes))
+	case "parse":
+		runParse(string(bytes))
+	default:
+		fmt.Printf("Unknown command: %s\n", command)
+		os.Exit(64)
+	}
+}
+
+func runParse(source string) {
+	scanner := NewScanner(source)
+	tokens := scanner.ScanTokens()
+	parser := NewParser(tokens)
+	expression, err := parser.parse()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %s\n", err)
 		os.Exit(65)
+	}
+	printer := &AstPrinter{}
+	fmt.Println(printer.Print(expression))
+}
+
+func runTokenize(source string) {
+	scanner := NewScanner(source)
+	tokens := scanner.ScanTokens()
+	for _, token := range tokens {
+		var literalStr string
+		if token.Literal == nil {
+			literalStr = "null"
+		} else {
+			literalStr = fmt.Sprintf("%v", token.Literal)
+		}
+		fmt.Printf("%s %s %s\n", token.Type, token.Lexeme, literalStr)
 	}
 }

@@ -2,217 +2,239 @@ package main
 
 import (
 	"fmt"
-	"os"
-	"strings"
+	"strconv"
 )
 
-const (
-	LEFT_PAREN  rune = '('
-	RIGHT_PAREN rune = ')'
-	LEFT_BRACE  rune = '{'
-	RIGHT_BRACE rune = '}'
-	COMMA       rune = ','
-	DOT         rune = '.'
-	MINUS       rune = '-'
-	PLUS        rune = '+'
-	SEMICOLON   rune = ';'
-	STAR        rune = '*'
-	EQUAL       rune = '='
-	BANG        rune = '!'
-	LESS        rune = '<'
-	GREATER     rune = '>'
-	SLASH       rune = '/'
-	SPACE       rune = ' '
-	TAB         rune = '\t'
-	NEWLINE     rune = '\n'
-	QUOTE       rune = '"'
-)
-
-var keywords = map[string]string{
-	"and":    "AND",
-	"class":  "CLASS",
-	"else":   "ELSE",
-	"false":  "FALSE",
-	"for":    "FOR",
-	"fun":    "FUN",
-	"if":     "IF",
-	"nil":    "NIL",
-	"or":     "OR",
-	"print":  "PRINT",
-	"return": "RETURN",
-	"super":  "SUPER",
-	"this":   "THIS",
-	"true":   "TRUE",
-	"var":    "VAR",
-	"while":  "WHILE",
+type Scanner struct {
+	source  string
+	tokens  []Token
+	start   int
+	current int
+	line    int
 }
 
-func isDigit(c rune) bool {
+func NewScanner(source string) *Scanner {
+	return &Scanner{
+		source:  source,
+		tokens:  make([]Token, 0),
+		start:   0,
+		current: 0,
+		line:    1,
+	}
+}
+
+func (s *Scanner) ScanTokens() []Token {
+	for !s.isAtEnd() {
+		s.start = s.current
+		s.scanToken()
+	}
+
+	s.tokens = append(s.tokens, Token{
+		Type:    EOF,
+		Lexeme:  "",
+		Literal: nil,
+		Line:    s.line,
+	})
+	return s.tokens
+}
+
+func (s *Scanner) scanToken() {
+	c := s.advance()
+	switch c {
+	case '(':
+		s.addToken(LEFT_PAREN, nil)
+	case ')':
+		s.addToken(RIGHT_PAREN, nil)
+	case '{':
+		s.addToken(LEFT_BRACE, nil)
+	case '}':
+		s.addToken(RIGHT_BRACE, nil)
+	case ',':
+		s.addToken(COMMA, nil)
+	case '.':
+		s.addToken(DOT, nil)
+	case '-':
+		s.addToken(MINUS, nil)
+	case '+':
+		s.addToken(PLUS, nil)
+	case ';':
+		s.addToken(SEMICOLON, nil)
+	case '*':
+		s.addToken(STAR, nil)
+	case '!':
+		if s.match('=') {
+			s.addToken(BANG_EQUAL, nil)
+		} else {
+			s.addToken(BANG, nil)
+		}
+	case '=':
+		if s.match('=') {
+			s.addToken(EQUAL_EQUAL, nil)
+		} else {
+			s.addToken(EQUAL, nil)
+		}
+	case '<':
+		if s.match('=') {
+			s.addToken(LESS_EQUAL, nil)
+		} else {
+			s.addToken(LESS, nil)
+		}
+	case '>':
+		if s.match('=') {
+			s.addToken(GREATER_EQUAL, nil)
+		} else {
+			s.addToken(GREATER, nil)
+		}
+	case '/':
+		if s.match('/') {
+			for s.peek() != '\n' && !s.isAtEnd() {
+				s.advance()
+			}
+		} else {
+			s.addToken(SLASH, nil)
+		}
+	case ' ', '\r', '\t':
+	case '\n':
+		s.line++
+	case '"':
+		s.string()
+	default:
+		if isDigit(c) {
+			s.number()
+		} else if isAlpha(c) {
+			s.identifier()
+		} else {
+			fmt.Printf("Unexpected character at line %d\n", s.line)
+		}
+	}
+}
+
+func (s *Scanner) identifier() {
+	for isAlphaNumeric(s.peek()) {
+		s.advance()
+	}
+
+	text := s.source[s.start:s.current]
+	tokenType, exists := keywords[text]
+	if !exists {
+		tokenType = IDENTIFIER
+	}
+	s.addToken(tokenType, nil)
+}
+
+func (s *Scanner) string() {
+	for s.peek() != '"' && !s.isAtEnd() {
+		if s.peek() == '\n' {
+			s.line++
+		}
+		s.advance()
+	}
+
+	if s.isAtEnd() {
+		fmt.Printf("Unterminated string at line %d\n", s.line)
+		return
+	}
+
+	s.advance()
+
+	value := s.source[s.start+1 : s.current-1]
+	s.addToken(STRING, value)
+}
+
+func (s *Scanner) number() {
+	for isDigit(s.peek()) {
+		s.advance()
+	}
+
+	if s.peek() == '.' && isDigit(s.peekNext()) {
+		s.advance()
+
+		for isDigit(s.peek()) {
+			s.advance()
+		}
+	}
+
+	value, err := strconv.ParseFloat(s.source[s.start:s.current], 64)
+	if err != nil {
+		fmt.Printf("Invalid number at line %d\n", s.line)
+		return
+	}
+	s.addToken(NUMBER, value)
+}
+
+func (s *Scanner) match(expected byte) bool {
+	if s.isAtEnd() {
+		return false
+	}
+	if s.source[s.current] != expected {
+		return false
+	}
+	s.current++
+	return true
+}
+
+func (s *Scanner) peek() byte {
+	if s.isAtEnd() {
+		return 0
+	}
+	return s.source[s.current]
+}
+
+func (s *Scanner) peekNext() byte {
+	if s.current+1 >= len(s.source) {
+		return 0
+	}
+	return s.source[s.current+1]
+}
+
+func (s *Scanner) isAtEnd() bool {
+	return s.current >= len(s.source)
+}
+
+func (s *Scanner) advance() byte {
+	s.current++
+	return s.source[s.current-1]
+}
+
+func (s *Scanner) addToken(tokenType TokenType, literal interface{}) {
+	text := s.source[s.start:s.current]
+	s.tokens = append(s.tokens, Token{
+		Type:    tokenType,
+		Lexeme:  text,
+		Literal: literal,
+		Line:    s.line,
+	})
+}
+
+func isDigit(c byte) bool {
 	return c >= '0' && c <= '9'
 }
 
-func contains(s string, c rune) bool {
-	for _, char := range s {
-		if char == c {
-			return true
-		}
-	}
-	return false
+func isAlpha(c byte) bool {
+	return (c >= 'a' && c <= 'z') ||
+		(c >= 'A' && c <= 'Z') ||
+		c == '_'
 }
 
-func normalizeDecimal(number string) string {
-	if !contains(number, '.') {
-		return number + ".0"
-	}
-	for strings.HasSuffix(number, "0") {
-		number = number[:len(number)-1]
-	}
-	if strings.HasSuffix(number, ".") {
-		number += "0"
-	}
-	return number
-}
-
-func isAlpha(c rune) bool {
-	return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_'
-}
-
-func isAlphaNumeric(c rune) bool {
+func isAlphaNumeric(c byte) bool {
 	return isAlpha(c) || isDigit(c)
 }
 
-func scanTokens(fileContents string) bool {
-	line := 1
-	hasError := false
-	runes := []rune(fileContents)
-	var errors []string
-	var tokens []string
-
-	for i := 0; i < len(runes); i++ {
-		current := runes[i]
-		switch current {
-		case LEFT_PAREN:
-			tokens = append(tokens, "LEFT_PAREN ( null")
-		case RIGHT_PAREN:
-			tokens = append(tokens, "RIGHT_PAREN ) null")
-		case LEFT_BRACE:
-			tokens = append(tokens, "LEFT_BRACE { null")
-		case RIGHT_BRACE:
-			tokens = append(tokens, "RIGHT_BRACE } null")
-		case COMMA:
-			tokens = append(tokens, "COMMA , null")
-		case DOT:
-			tokens = append(tokens, "DOT . null")
-		case MINUS:
-			tokens = append(tokens, "MINUS - null")
-		case PLUS:
-			tokens = append(tokens, "PLUS + null")
-		case SEMICOLON:
-			tokens = append(tokens, "SEMICOLON ; null")
-		case STAR:
-			tokens = append(tokens, "STAR * null")
-		case BANG:
-			if i+1 < len(runes) && runes[i+1] == '=' {
-				tokens = append(tokens, "BANG_EQUAL != null")
-				i++
-			} else {
-				tokens = append(tokens, "BANG ! null")
-			}
-		case EQUAL:
-			if i+1 < len(runes) && runes[i+1] == '=' {
-				tokens = append(tokens, "EQUAL_EQUAL == null")
-				i++
-			} else {
-				tokens = append(tokens, "EQUAL = null")
-			}
-		case LESS:
-			if i+1 < len(runes) && runes[i+1] == '=' {
-				tokens = append(tokens, "LESS_EQUAL <= null")
-				i++
-			} else {
-				tokens = append(tokens, "LESS < null")
-			}
-		case GREATER:
-			if i+1 < len(runes) && runes[i+1] == '=' {
-				tokens = append(tokens, "GREATER_EQUAL >= null")
-				i++
-			} else {
-				tokens = append(tokens, "GREATER > null")
-			}
-		case SLASH:
-			if i+1 < len(runes) && runes[i+1] == '/' {
-				i++
-				for i < len(runes) && runes[i] != NEWLINE {
-					i++
-				}
-				i--
-			} else {
-				tokens = append(tokens, "SLASH / null")
-			}
-		case QUOTE:
-			start := i + 1
-			i++
-			for i < len(runes) && runes[i] != QUOTE && runes[i] != NEWLINE {
-				i++
-			}
-			if i >= len(runes) || runes[i] != QUOTE {
-				errors = append(errors, fmt.Sprintf("[line %d] Error: Unterminated string.", line))
-				hasError = true
-				break
-			}
-			value := string(runes[start:i])
-			tokens = append(tokens, fmt.Sprintf("STRING \"%s\" %s", value, value))
-		case NEWLINE:
-			line++
-		case SPACE, TAB:
-			continue
-		case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
-			start := i
-			for i+1 < len(runes) && isDigit(runes[i+1]) {
-				i++
-			}
-			if i+1 < len(runes) && runes[i+1] == '.' {
-				i++
-				if i+1 < len(runes) && isDigit(runes[i+1]) {
-					for i+1 < len(runes) && isDigit(runes[i+1]) {
-						i++
-					}
-				} else {
-					i--
-				}
-
-			}
-			number := string(runes[start : i+1])
-			literalValue := normalizeDecimal(number)
-			tokens = append(tokens, fmt.Sprintf("NUMBER %s %s", number, literalValue))
-
-		default:
-			if isAlpha(current) {
-				start := i
-				for i+1 < len(runes) && isAlphaNumeric(runes[i+1]) {
-					i++
-				}
-				identifier := string(runes[start : i+1])
-				if tokenType, isKeyword := keywords[identifier]; isKeyword {
-					tokens = append(tokens, fmt.Sprintf("%s %s null", tokenType, identifier))
-				} else {
-					tokens = append(tokens, fmt.Sprintf("IDENTIFIER %s null", identifier))
-				}
-				continue
-			}
-			errors = append(errors, fmt.Sprintf("[line %d] Error: Unexpected character: %c", line, current))
-			hasError = true
-		}
-	}
-
-	for _, err := range errors {
-		fmt.Fprintln(os.Stderr, err)
-	}
-
-	for _, token := range tokens {
-		fmt.Println(token)
-	}
-
-	fmt.Println("EOF  null")
-	return hasError
+var keywords = map[string]TokenType{
+	"and":    AND,
+	"class":  CLASS,
+	"else":   ELSE,
+	"false":  FALSE,
+	"for":    FOR,
+	"fun":    FUN,
+	"if":     IF,
+	"nil":    NIL,
+	"or":     OR,
+	"print":  PRINT,
+	"return": RETURN,
+	"super":  SUPER,
+	"this":   THIS,
+	"true":   TRUE,
+	"var":    VAR,
+	"while":  WHILE,
 }
