@@ -79,9 +79,9 @@ func runTokenize(source string) {
 		fmt.Printf("%s %s %s\n", token.Type, token.Lexeme, literalStr)
 	}
 
-	if len(errors) == 0 {
-		fmt.Printf("EOF  null\n")
-	}
+	// if len(errors) == 0 {
+	// 	fmt.Printf("EOF  null\n")
+	// }
 
 	if len(errors) > 0 {
 		for _, err := range errors {
