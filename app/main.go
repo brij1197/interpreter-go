@@ -56,14 +56,10 @@ func runTokenize(source string) {
 	scanner := NewScanner(source)
 	tokens, errors := scanner.ScanTokens()
 
-	if len(errors) > 0 {
-		for _, err := range errors {
-			fmt.Fprintln(os.Stderr, err)
-		}
-		os.Exit(65)
-	}
-
 	for _, token := range tokens {
+		if token.Type == EOF {
+			continue
+		}
 		var literalStr string
 		if token.Literal == nil {
 			literalStr = "null"
@@ -84,5 +80,16 @@ func runTokenize(source string) {
 			literalStr = fmt.Sprintf("%v", token.Literal)
 		}
 		fmt.Printf("%s %s %s\n", token.Type, token.Lexeme, literalStr)
+	}
+
+	if len(errors) == 0 {
+		fmt.Printf("EOF  null\n")
+	}
+
+	if len(errors) > 0 {
+		for _, err := range errors {
+			fmt.Fprintln(os.Stderr, err)
+		}
+		os.Exit(65)
 	}
 }
