@@ -61,19 +61,6 @@ func runTokenize(source string) {
 		var literalStr string
 		if token.Literal == nil {
 			literalStr = "null"
-		} else if token.Type == NUMBER {
-			switch v := token.Literal.(type) {
-			case float64:
-				if v == float64(int(v)) {
-					literalStr = fmt.Sprintf("%.1f", v)
-				} else {
-					literalStr = fmt.Sprintf("%g", v)
-				}
-			case int:
-				literalStr = fmt.Sprintf("%.1f", float64(v))
-			default:
-				literalStr = fmt.Sprintf("%v", token.Literal)
-			}
 		} else {
 			literalStr = fmt.Sprintf("%v", token.Literal)
 		}

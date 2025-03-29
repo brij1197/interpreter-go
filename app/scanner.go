@@ -6,11 +6,12 @@ import (
 )
 
 type Scanner struct {
-	source  string
-	tokens  []Token
-	start   int
-	current int
-	line    int
+	source   string
+	tokens   []Token
+	start    int
+	current  int
+	line     int
+	hadError bool
 }
 
 func NewScanner(source string) *Scanner {
@@ -24,16 +25,20 @@ func NewScanner(source string) *Scanner {
 }
 
 func (s *Scanner) ScanTokens() ([]Token, error) {
+	var scanError error
 	for !s.isAtEnd() {
 		s.start = s.current
 		err := s.scanToken()
 		if err != nil {
-			return nil, err
+			scanError = err
+			s.hadError = true
+			break
 		}
 	}
-
-	s.tokens = append(s.tokens, NewToken(EOF, "", nil, s.line))
-	return s.tokens, nil
+	if !s.hadError {
+		s.tokens = append(s.tokens, NewToken(EOF, "", nil, s.line))
+	}
+	return s.tokens, scanError
 }
 
 func (s *Scanner) string() error {
