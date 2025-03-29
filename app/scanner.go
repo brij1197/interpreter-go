@@ -54,6 +54,14 @@ func normalizeDecimal(number string) string {
 	return number
 }
 
+func isAlpha(c rune) bool {
+	return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_'
+}
+
+func isAlphaNumeric(c rune) bool {
+	return isAlpha(c) || isDigit(c)
+}
+
 func scanTokens(fileContents string) bool {
 	line := 1
 	hasError := false
@@ -158,6 +166,17 @@ func scanTokens(fileContents string) bool {
 			number := string(runes[start : i+1])
 			literalValue := normalizeDecimal(number)
 			tokens = append(tokens, fmt.Sprintf("NUMBER %s %s", number, literalValue))
+
+		case c:
+			if isAlpha(current) {
+				start := i
+				for i+1 < len(runes) && isAlphaNumeric(runes[i+1]) {
+					i++
+				}
+				identifier := string(runes[start : i+1])
+				tokens = append(tokens, fmt.Sprintf("IDENTIFIER %s null", identifier))
+				continue
+			}
 		default:
 			errors = append(errors, fmt.Sprintf("[line %d] Error: Unexpected character: %c", line, current))
 			hasError = true
