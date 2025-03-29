@@ -29,12 +29,11 @@ func (s *Scanner) ScanTokens() ([]Token, error) {
 		s.start = s.current
 		err := s.scanToken()
 		if err != nil {
+			s.tokens = append(s.tokens, NewToken(EOF, "", nil, s.line))
 			return s.tokens, err
 		}
 	}
-	if !s.hadError {
-		s.tokens = append(s.tokens, NewToken(EOF, "", nil, s.line))
-	}
+	s.tokens = append(s.tokens, NewToken(EOF, "", nil, s.line))
 	return s.tokens, nil
 }
 
