@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 )
 
 const (
@@ -38,6 +39,19 @@ func contains(s string, c rune) bool {
 		}
 	}
 	return false
+}
+
+func normalizeDecimal(number string) string {
+	if !contains(number, '.') {
+		return number + ".0"
+	}
+	for strings.HasSuffix(number, "0") {
+		number = number[:len(number)-1]
+	}
+	if strings.HasSuffix(number, ".") {
+		number += "0"
+	}
+	return number
 }
 
 func scanTokens(fileContents string) bool {
@@ -142,10 +156,7 @@ func scanTokens(fileContents string) bool {
 
 			}
 			number := string(runes[start : i+1])
-			literalValue := number
-			if !contains(number, '.') {
-				literalValue += ".0"
-			}
+			literalValue := normalizeDecimal(number)
 			tokens = append(tokens, fmt.Sprintf("NUMBER %s %s", number, literalValue))
 		default:
 			errors = append(errors, fmt.Sprintf("[line %d] Error: Unexpected character: %c", line, current))
