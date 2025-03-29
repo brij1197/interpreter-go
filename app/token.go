@@ -59,17 +59,28 @@ const (
 
 func (t Token) String() string {
 	var literalStr string
-	if t.Literal == nil {
+	switch v := t.Literal.(type) {
+	case nil:
 		literalStr = "null"
-	} else if num, ok := t.Literal.(float64); ok {
-		literalStr = fmt.Sprintf("%.1f", num)
-	} else {
-		literalStr = fmt.Sprintf("%v", t.Literal)
+	case float64:
+		literalStr = fmt.Sprintf("%.1f", v)
+	case int:
+		literalStr = fmt.Sprintf("%.1f", float64(v))
+	case int64:
+		literalStr = fmt.Sprintf("%.1f", float64(v))
+	default:
+		literalStr = fmt.Sprintf("%v", v)
 	}
 	return fmt.Sprintf("%s %s %s", t.Type, t.Lexeme, literalStr)
 }
 
 func NewToken(tokenType TokenType, lexeme string, literal interface{}, line int) Token {
+	switch v := literal.(type) {
+	case int:
+		literal = float64(v)
+	case int64:
+		literal = float64(v)
+	}
 	return Token{
 		Type:    tokenType,
 		Lexeme:  lexeme,
