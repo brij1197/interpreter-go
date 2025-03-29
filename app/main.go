@@ -55,7 +55,7 @@ func runTokenize(source string) {
 			literalStr = "null"
 		} else if token.Type == NUMBER {
 			if num, ok := token.Literal.(float64); ok {
-				literalStr = fmt.Sprintf("%.1f", num)
+				literalStr = fmt.Sprintf("%g", num)
 			} else if num, ok := token.Literal.(int); ok {
 				literalStr = fmt.Sprintf("%.1f", float64(num))
 			} else {
