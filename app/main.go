@@ -35,7 +35,11 @@ func main() {
 
 func runParse(source string) {
 	scanner := NewScanner(source)
-	tokens := scanner.ScanTokens()
+	tokens, err := scanner.ScanTokens()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %s\n", err)
+		os.Exit(65)
+	}
 	parser := NewParser(tokens)
 	expression, err := parser.parse()
 	if err != nil {
@@ -68,7 +72,7 @@ func runTokenize(source string) {
 			case int:
 				literalStr = fmt.Sprintf("%.1f", float64(v))
 			default:
-				literalStr = fmt.Sprintf("%v", v)
+				literalStr = fmt.Sprintf("%v", token.Literal)
 			}
 		} else {
 			literalStr = fmt.Sprintf("%v", token.Literal)

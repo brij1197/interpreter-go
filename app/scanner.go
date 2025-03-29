@@ -23,7 +23,7 @@ func NewScanner(source string) *Scanner {
 	}
 }
 
-func (s *Scanner) ScanTokens() []Token {
+func (s *Scanner) ScanTokens() ([]Token, error) {
 	for !s.isAtEnd() {
 		s.start = s.current
 		err := s.scanToken()
@@ -138,25 +138,6 @@ func (s *Scanner) identifier() {
 		tokenType = IDENTIFIER
 	}
 	s.addToken(tokenType, nil)
-}
-
-func (s *Scanner) string() {
-	for s.peek() != '"' && !s.isAtEnd() {
-		if s.peek() == '\n' {
-			s.line++
-		}
-		s.advance()
-	}
-
-	if s.isAtEnd() {
-		fmt.Printf("Unterminated string at line %d\n", s.line)
-		return
-	}
-
-	s.advance()
-
-	value := s.source[s.start+1 : s.current-1]
-	s.addToken(STRING, value)
 }
 
 func (s *Scanner) number() {
