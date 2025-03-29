@@ -155,8 +155,11 @@ func (s *Scanner) number() {
 	}
 
 	number := s.source[s.start:s.current]
-	value, _ := strconv.ParseFloat(number, 64)
-	s.addToken(NUMBER, value)
+	value, err := strconv.ParseFloat(number, 64)
+	if err != nil {
+		panic(err)
+	}
+	s.addToken(NUMBER, float64(value))
 }
 
 func (s *Scanner) match(expected byte) bool {
