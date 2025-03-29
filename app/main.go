@@ -57,9 +57,6 @@ func runTokenize(source string) {
 	tokens, errors := scanner.ScanTokens()
 
 	for _, token := range tokens {
-		if token.Type == EOF {
-			continue
-		}
 		var literalStr string
 		if token.Literal == nil {
 			literalStr = "null"
