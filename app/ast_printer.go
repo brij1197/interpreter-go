@@ -23,7 +23,7 @@ func (a *AstPrinter) VisitLiteralExpr(expr *Literal) interface{} {
 		if strings.Contains(num.Text, ".") {
 			return num.Text
 		}
-		return fmt.Sprintf("%.1f", num)
+		return fmt.Sprintf("%.1f", num.Value)
 	}
 	return fmt.Sprintf("%v", expr.Value)
 }
