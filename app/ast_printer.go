@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 )
 
 type AstPrinter struct{}
@@ -18,7 +19,10 @@ func (a *AstPrinter) VisitLiteralExpr(expr *Literal) interface{} {
 	if expr.Value == nil {
 		return "nil"
 	}
-	if num, ok := expr.Value.(float64); ok {
+	if num, ok := expr.Value.(Number); ok {
+		if strings.Contains(num.Text, ".") {
+			return num.Text
+		}
 		return fmt.Sprintf("%.1f", num)
 	}
 	return fmt.Sprintf("%v", expr.Value)
