@@ -163,10 +163,7 @@ func (s *Scanner) number() {
 		s.errors = append(s.errors, fmt.Errorf("[line %d] Error: Invalid number: %s", s.line, number))
 		return
 	}
-	s.addToken(NUMBER, struct {
-		value float64
-		text  string
-	}{value, number})
+	s.addToken(NUMBER, value)
 }
 
 func (s *Scanner) match(expected byte) bool {
