@@ -163,8 +163,9 @@ func (s *Scanner) number() {
 		s.errors = append(s.errors, fmt.Errorf("[line %d] Error: Invalid number: %s", s.line, number))
 		return
 	}
-	floatValue := float64(value)
-	s.addToken(NUMBER, floatValue)
+	formattedValue := fmt.Sprintf("%.1f", value)
+	parsedValue, _ := strconv.ParseFloat(formattedValue, 64)
+	s.addToken(NUMBER, parsedValue)
 }
 
 func (s *Scanner) match(expected byte) bool {
