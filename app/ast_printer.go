@@ -19,14 +19,18 @@ func (a *AstPrinter) VisitLiteralExpr(expr *Literal) interface{} {
 	if expr.Value == nil {
 		return "nil"
 	}
-	if num, ok := expr.Value.(float64); ok {
-		str := fmt.Sprintf("%v", num)
+	switch v := expr.Value.(type) {
+	case string:
+		return v
+	case float64:
+		str := fmt.Sprintf("%v", v)
 		if !strings.Contains(str, ".") {
-			return fmt.Sprintf("%.1f", num)
+			return fmt.Sprintf("%.1f", v)
 		}
 		return str
+	default:
+		return fmt.Sprintf("%v", expr.Value)
 	}
-	return fmt.Sprintf("%v", expr.Value)
 }
 
 func (a *AstPrinter) parenthesize(name string, exprs ...Expr) string {
