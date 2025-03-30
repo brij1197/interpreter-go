@@ -158,7 +158,11 @@ func (s *Scanner) number() {
 	}
 
 	number := s.source[s.start:s.current]
-	value, _ := strconv.ParseFloat(number, 64)
+	value, err := strconv.ParseFloat(number, 64)
+	if err != nil {
+		s.errors = append(s.errors, fmt.Errorf("[line %d] Error: Invalid number: %s", s.line, number))
+		return
+	}
 	floatValue := float64(value)
 	s.addToken(NUMBER, floatValue)
 }
