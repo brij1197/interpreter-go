@@ -14,11 +14,6 @@ type Scanner struct {
 	errors  []error
 }
 
-type Number struct {
-	Value float64
-	Text  string
-}
-
 func NewScanner(source string) *Scanner {
 	return &Scanner{
 		source:  source,
@@ -162,13 +157,13 @@ func (s *Scanner) number() {
 		}
 	}
 
-	text := s.source[s.start:s.current]
-	value, err := strconv.ParseFloat(text, 64)
+	number := s.source[s.start:s.current]
+	value, err := strconv.ParseFloat(number, 64)
 	if err != nil {
-		s.errors = append(s.errors, fmt.Errorf("[line %d] Error: Invalid number: %s", s.line, text))
+		s.errors = append(s.errors, fmt.Errorf("[line %d] Error: Invalid number: %s", s.line, number))
 		return
 	}
-	s.addToken(NUMBER, Number{Value: value, Text: text})
+	s.addToken(NUMBER, value)
 }
 
 func (s *Scanner) match(expected byte) bool {

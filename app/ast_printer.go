@@ -19,11 +19,12 @@ func (a *AstPrinter) VisitLiteralExpr(expr *Literal) interface{} {
 	if expr.Value == nil {
 		return "nil"
 	}
-	if num, ok := expr.Value.(Number); ok {
-		if strings.Contains(num.Text, ".") {
-			return num.Text
+	if num, ok := expr.Value.(float64); ok {
+		str := fmt.Sprintf("%v", num)
+		if !strings.Contains(str, ".") {
+			return fmt.Sprintf("%.1f", num)
 		}
-		return fmt.Sprintf("%.1f", num.Value)
+		return str
 	}
 	return fmt.Sprintf("%v", expr.Value)
 }
