@@ -16,6 +16,9 @@ func (a *AstPrinter) VisitLiteralExpr(expr *Literal) interface{} {
 	if expr.Value == nil {
 		return "nil"
 	}
+	if num, ok := expr.Value.(float64); ok {
+		return fmt.Sprintf("%.1f", num)
+	}
 	return fmt.Sprintf("%v", expr.Value)
 }
 
