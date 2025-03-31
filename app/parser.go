@@ -30,7 +30,27 @@ func (p *Parser) parse() (Expr, error) {
 }
 
 func (p *Parser) expression() (Expr, error) {
-	return p.unary()
+	return p.factor()
+}
+
+func (p *Parser) factor() (Expr, error) {
+	expr, err := p.unary()
+	if err != nil {
+		return nil, err
+	}
+	for p.match(STAR, SLASH) {
+		operator := p.previous()
+		right, err := p.unary()
+		if err != nil {
+			return nil, err
+		}
+		expr = &Binary{
+			Left:     expr,
+			Operator: operator,
+			Right:    right,
+		}
+	}
+	return expr, nil
 }
 
 func (p *Parser) unary() (Expr, error) {
