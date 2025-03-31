@@ -33,6 +33,10 @@ func (a *AstPrinter) VisitLiteralExpr(expr *Literal) interface{} {
 	}
 }
 
+func (a *AstPrinter) VisitGroupingExpr(expr *Grouping) interface{} {
+	return a.parenthesize("group", expr.Expression)
+}
+
 func (a *AstPrinter) parenthesize(name string, exprs ...Expr) string {
 	var result string
 	result += "(" + name

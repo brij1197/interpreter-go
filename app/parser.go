@@ -49,6 +49,17 @@ func (p *Parser) primary() (Expr, error) {
 	if p.match(STRING) {
 		return &Literal{Value: p.previous().Literal}, nil
 	}
+	if p.match(LEFT_PAREN) {
+		expr, err := p.expression()
+		if err != nil {
+			return nil, err
+		}
+		if p.match(RIGHT_PAREN) {
+			return &Grouping{Expression: expr}, nil
+		}
+		return &Grouping{Expression: expr}, nil
+	}
+
 	return nil, fmt.Errorf("Expect expression.")
 }
 

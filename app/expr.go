@@ -14,9 +14,14 @@ type Binary struct {
 	Right    Expr
 }
 
+type Grouping struct {
+	Expression Expr
+}
+
 type ExprVisitor interface {
 	VisitBinaryExpr(expr *Binary) interface{}
 	VisitLiteralExpr(expr *Literal) interface{}
+	VisitGroupingExpr(expr *Grouping) interface{}
 }
 
 func (b *Binary) Accept(visitor ExprVisitor) interface{} {
@@ -25,4 +30,8 @@ func (b *Binary) Accept(visitor ExprVisitor) interface{} {
 
 func (l *Literal) Accept(visitor ExprVisitor) interface{} {
 	return visitor.VisitLiteralExpr(l)
+}
+
+func (g *Grouping) Accept(visitor ExprVisitor) interface{} {
+	return visitor.VisitGroupingExpr(g)
 }
