@@ -18,10 +18,16 @@ type Grouping struct {
 	Expression Expr
 }
 
+type Unary struct {
+	Operator Token
+	Right    Expr
+}
+
 type ExprVisitor interface {
 	VisitBinaryExpr(expr *Binary) interface{}
 	VisitLiteralExpr(expr *Literal) interface{}
 	VisitGroupingExpr(expr *Grouping) interface{}
+	VisitUnaryExpr(expr *Unary) interface{}
 }
 
 func (b *Binary) Accept(visitor ExprVisitor) interface{} {
@@ -34,4 +40,8 @@ func (l *Literal) Accept(visitor ExprVisitor) interface{} {
 
 func (g *Grouping) Accept(visitor ExprVisitor) interface{} {
 	return visitor.VisitGroupingExpr(g)
+}
+
+func (u *Unary) Accept(visitor ExprVisitor) interface{} {
+	return visitor.VisitUnaryExpr(u)
 }

@@ -30,6 +30,21 @@ func (p *Parser) parse() (Expr, error) {
 }
 
 func (p *Parser) expression() (Expr, error) {
+	return p.unary()
+}
+
+func (p *Parser) unary() (Expr, error) {
+	if p.match(BANG, MINUS) {
+		operator := p.previous()
+		right, err := p.unary()
+		if err != nil {
+			return nil, err
+		}
+		return &Unary{
+			Operator: operator,
+			Right:    right,
+		}, nil
+	}
 	return p.primary()
 }
 
