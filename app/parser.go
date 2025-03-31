@@ -46,6 +46,9 @@ func (p *Parser) primary() (Expr, error) {
 	if p.match(NUMBER) {
 		return &Literal{Value: p.previous().Literal}, nil
 	}
+	if p.match(STRING) {
+		return &Literal{Value: p.previous().Literal}, nil
+	}
 	return nil, fmt.Errorf("Expect expression.")
 }
 
