@@ -30,7 +30,27 @@ func (p *Parser) parse() (Expr, error) {
 }
 
 func (p *Parser) expression() (Expr, error) {
-	return p.comparison()
+	return p.equality()
+}
+
+func (p *Parser) equality() (Expr, error) {
+	expr, err := p.comparison()
+	if err != nil {
+		return nil, err
+	}
+	for p.match(EQUAL_EQUAL, BANG_EQUAL) {
+		operator := p.previous()
+		right, err := p.comparison()
+		if err != nil {
+			return nil, err
+		}
+		expr = &Binary{
+			Left:     expr,
+			Operator: operator,
+			Right:    right,
+		}
+	}
+	return expr, nil
 }
 
 func (p *Parser) comparison() (Expr, error) {
