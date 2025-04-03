@@ -27,6 +27,8 @@ func main() {
 		runTokenize(string(bytes))
 	case "parse":
 		runParse(string(bytes))
+	case "evaluate":
+		runEvaluate(string(bytes))
 	default:
 		fmt.Printf("Unknown command: %s\n", command)
 		os.Exit(64)
@@ -84,5 +86,37 @@ func runTokenize(source string) {
 			fmt.Fprintln(os.Stderr, err)
 		}
 		os.Exit(65)
+	}
+}
+
+func runEvaluate(source string) {
+	scanner := NewScanner(source)
+	tokens, scanErrors := scanner.ScanTokens()
+	if len(scanErrors) > 0 {
+		for _, err := range scanErrors {
+			fmt.Fprintln(os.Stderr, err)
+		}
+		os.Exit(65)
+	}
+	parser := NewParser(tokens)
+	expression, err := parser.parse()
+
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error parsing: %v\n", err)
+		os.Exit(1)
+	}
+	interpreter := NewInterpreter()
+	result := interpreter.Evaluate(expression)
+	printResult(result)
+}
+
+func printResult(value interface{}) {
+	switch v := value.(type) {
+	case nil:
+		fmt.Println("nil")
+	case bool:
+		fmt.Println(v)
+	default:
+		fmt.Printf("%v\n", v)
 	}
 }
