@@ -33,6 +33,23 @@ func (i *Interpreter) VisitUnaryExpr(expr *Unary) interface{} {
 }
 
 func (i *Interpreter) VisitBinaryExpr(expr *Binary) interface{} {
+	left := i.Evaluate(expr.Left)
+	right := i.Evaluate(expr.Right)
+
+	switch expr.Operator.Type {
+	case STAR:
+		if l, ok := left.(float64); ok {
+			if r, ok := right.(float64); ok {
+				return l * r
+			}
+		}
+	case SLASH:
+		if l, ok := left.(float64); ok {
+			if r, ok := right.(float64); ok {
+				return l / r
+			}
+		}
+	}
 	return nil
 }
 
