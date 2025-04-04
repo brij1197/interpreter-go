@@ -19,9 +19,29 @@ func (i *Interpreter) VisitGroupingExpr(expr *Grouping) interface{} {
 }
 
 func (i *Interpreter) VisitUnaryExpr(expr *Unary) interface{} {
+	right := i.Evaluate(expr.Right)
+	switch expr.Operator.Type {
+	case MINUS:
+		if num, ok := right.(float64); ok {
+			return -num
+		}
+		return nil
+	case BANG:
+		return !i.isTruthy(right)
+	}
 	return nil
 }
 
 func (i *Interpreter) VisitBinaryExpr(expr *Binary) interface{} {
 	return nil
+}
+
+func (i *Interpreter) isTruthy(object interface{}) bool {
+	if object == nil {
+		return false
+	}
+	if b, ok := object.(bool); ok {
+		return b
+	}
+	return true
 }
