@@ -38,6 +38,11 @@ func (i *Interpreter) VisitBinaryExpr(expr *Binary) interface{} {
 
 	switch expr.Operator.Type {
 	case PLUS:
+		if l, ok := left.(string); ok {
+			if r, ok := right.(string); ok {
+				return l + r
+			}
+		}
 		if l, ok := left.(float64); ok {
 			if r, ok := right.(float64); ok {
 				return l + r
