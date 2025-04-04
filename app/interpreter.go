@@ -37,6 +37,18 @@ func (i *Interpreter) VisitBinaryExpr(expr *Binary) interface{} {
 	right := i.Evaluate(expr.Right)
 
 	switch expr.Operator.Type {
+	case PLUS:
+		if l, ok := left.(float64); ok {
+			if r, ok := right.(float64); ok {
+				return l + r
+			}
+		}
+	case MINUS:
+		if l, ok := left.(float64); ok {
+			if r, ok := right.(float64); ok {
+				return l - r
+			}
+		}
 	case STAR:
 		if l, ok := left.(float64); ok {
 			if r, ok := right.(float64); ok {
