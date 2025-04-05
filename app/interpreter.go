@@ -112,22 +112,42 @@ func (i *Interpreter) VisitBinaryExpr(expr *Binary) interface{} {
 			}
 		}
 	case PLUS:
-		if l, ok := left.(string); ok {
-			if r, ok := right.(string); ok {
-				return l + r
+		if lStr, lOk := left.(string); lOk {
+			if rStr, rOk := right.(string); rOk {
+				return lStr + rStr
 			}
+			panic(&RuntimeError{
+				token:   expr.Operator,
+				message: "Operands must be two numbers or two strings.",
+			})
 		}
-		if l, ok := left.(float64); ok {
-			if r, ok := right.(float64); ok {
-				return l + r
+		if lNum, lOk := left.(float64); lOk {
+			if rNum, rOk := right.(float64); rOk {
+				return lNum + rNum
 			}
+			panic(&RuntimeError{
+				token:   expr.Operator,
+				message: "Operands must be two numbers or two strings.",
+			})
 		}
+		panic(&RuntimeError{
+			token:   expr.Operator,
+			message: "Operands must be two numbers or two strings.",
+		})
 	case MINUS:
-		if l, ok := left.(float64); ok {
-			if r, ok := right.(float64); ok {
-				return l - r
-			}
+		if _, ok := left.(float64); !ok {
+			panic(&RuntimeError{
+				token:   expr.Operator,
+				message: "Operands must be numbers.",
+			})
 		}
+		if _, ok := right.(float64); !ok {
+			panic(&RuntimeError{
+				token:   expr.Operator,
+				message: "Operands must be numbers.",
+			})
+		}
+		return left.(float64) - right.(float64)
 	}
 	return nil
 }
