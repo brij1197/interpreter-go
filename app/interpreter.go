@@ -37,6 +37,10 @@ func (i *Interpreter) VisitBinaryExpr(expr *Binary) interface{} {
 	right := i.Evaluate(expr.Right)
 
 	switch expr.Operator.Type {
+	case EQUAL_EQUAL:
+		return i.isEqual(left, right)
+	case BANG_EQUAL:
+		return !i.isEqual(left, right)
 	case GREATER:
 		if l, ok := left.(float64); ok {
 			if r, ok := right.(float64); ok {
@@ -92,6 +96,34 @@ func (i *Interpreter) VisitBinaryExpr(expr *Binary) interface{} {
 		}
 	}
 	return nil
+}
+
+func (i *Interpreter) isEqual(left, right interface{}) bool {
+	if left == nil && right == nil {
+		return true
+	}
+	if left == nil {
+		return false
+	}
+	if aStr, aOk := left.(string); aOk {
+		if bStr, bOk := right.(string); bOk {
+			return aStr == bStr
+		}
+		return false
+	}
+	if aNum, aOk := left.(float64); aOk {
+		if bNum, bOk := right.(float64); bOk {
+			return aNum == bNum
+		}
+		return false
+	}
+	if aBool, aOk := left.(bool); aOk {
+		if bBool, bOk := right.(bool); bOk {
+			return aBool == bBool
+		}
+		return false
+	}
+	return false
 }
 
 func (i *Interpreter) isTruthy(object interface{}) bool {
