@@ -106,17 +106,5 @@ func runEvaluate(source string) {
 		os.Exit(1)
 	}
 	interpreter := NewInterpreter()
-	result := interpreter.Evaluate(expression)
-	printResult(result)
-}
-
-func printResult(value interface{}) {
-	switch v := value.(type) {
-	case nil:
-		fmt.Println("nil")
-	case bool:
-		fmt.Println(v)
-	default:
-		fmt.Printf("%v\n", v)
-	}
+	interpreter.Interpret(expression)
 }

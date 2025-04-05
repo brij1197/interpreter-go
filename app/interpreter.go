@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 )
 
 type Interpreter struct{}
@@ -127,9 +128,7 @@ func (i *Interpreter) Interpret(expr Expr) {
 		}
 	}()
 	result := i.Evaluate(expr)
-	if result != nil {
-		fmt.Println(i.stringify(result))
-	}
+	fmt.Println(i.stringify(result))
 }
 
 func (i *Interpreter) isEqual(left, right interface{}) bool {
@@ -178,11 +177,12 @@ func (i *Interpreter) stringify(value interface{}) string {
 	switch v := value.(type) {
 	case float64:
 		text := fmt.Sprintf("%g", v)
+		text = strings.TrimSuffix(text, ".0")
 		return text
 	case string:
 		return v
 	case bool:
-		return fmt.Sprintf("%t", v)
+		return fmt.Sprintf("%v", v)
 	default:
 		return fmt.Sprintf("%v", v)
 	}
