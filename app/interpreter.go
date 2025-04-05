@@ -88,29 +88,61 @@ func (i *Interpreter) VisitBinaryExpr(expr *Binary) interface{} {
 	case BANG_EQUAL:
 		return !i.isEqual(left, right)
 	case GREATER:
-		if l, ok := left.(float64); ok {
-			if r, ok := right.(float64); ok {
-				return l > r
-			}
+		if _, ok := left.(float64); !ok {
+			panic(&RuntimeError{
+				token:   expr.Operator,
+				message: "Operands must be numbers.",
+			})
 		}
+		if _, ok := right.(float64); !ok {
+			panic(&RuntimeError{
+				token:   expr.Operator,
+				message: "Operands must be numbers.",
+			})
+		}
+		return left.(float64) > right.(float64)
 	case GREATER_EQUAL:
-		if l, ok := left.(float64); ok {
-			if r, ok := right.(float64); ok {
-				return l >= r
-			}
+		if _, ok := left.(float64); !ok {
+			panic(&RuntimeError{
+				token:   expr.Operator,
+				message: "Operands must be numbers.",
+			})
 		}
+		if _, ok := right.(float64); !ok {
+			panic(&RuntimeError{
+				token:   expr.Operator,
+				message: "Operands must be numbers.",
+			})
+		}
+		return left.(float64) >= right.(float64)
 	case LESS:
-		if l, ok := left.(float64); ok {
-			if r, ok := right.(float64); ok {
-				return l < r
-			}
+		if _, ok := left.(float64); !ok {
+			panic(&RuntimeError{
+				token:   expr.Operator,
+				message: "Operands must be numbers.",
+			})
 		}
+		if _, ok := right.(float64); !ok {
+			panic(&RuntimeError{
+				token:   expr.Operator,
+				message: "Operands must be numbers.",
+			})
+		}
+		return left.(float64) < right.(float64)
 	case LESS_EQUAL:
-		if l, ok := left.(float64); ok {
-			if r, ok := right.(float64); ok {
-				return l <= r
-			}
+		if _, ok := left.(float64); !ok {
+			panic(&RuntimeError{
+				token:   expr.Operator,
+				message: "Operands must be numbers.",
+			})
 		}
+		if _, ok := right.(float64); !ok {
+			panic(&RuntimeError{
+				token:   expr.Operator,
+				message: "Operands must be numbers.",
+			})
+		}
+		return left.(float64) <= right.(float64)
 	case PLUS:
 		if lStr, lOk := left.(string); lOk {
 			if rStr, rOk := right.(string); rOk {
