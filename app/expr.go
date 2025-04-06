@@ -4,6 +4,10 @@ type Expr interface {
 	Accept(visitor ExprVisitor) interface{}
 }
 
+type Variable struct {
+	Name Token
+}
+
 type Literal struct {
 	Value interface{}
 }
@@ -28,6 +32,7 @@ type ExprVisitor interface {
 	VisitLiteralExpr(expr *Literal) interface{}
 	VisitGroupingExpr(expr *Grouping) interface{}
 	VisitUnaryExpr(expr *Unary) interface{}
+	VisitVariableExpr(expr *Variable) interface{}
 }
 
 func (b *Binary) Accept(visitor ExprVisitor) interface{} {
@@ -44,4 +49,8 @@ func (g *Grouping) Accept(visitor ExprVisitor) interface{} {
 
 func (u *Unary) Accept(visitor ExprVisitor) interface{} {
 	return visitor.VisitUnaryExpr(u)
+}
+
+func (v *Variable) Accept(visitor ExprVisitor) interface{} {
+	return visitor.VisitVariableExpr(v)
 }

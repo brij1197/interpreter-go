@@ -51,3 +51,7 @@ func (a *AstPrinter) parenthesize(name string, exprs ...Expr) string {
 	result += ")"
 	return result
 }
+
+func (a *AstPrinter) VisitVariableExpr(expr *Variable) interface{} {
+	return expr.Name.Lexeme
+}

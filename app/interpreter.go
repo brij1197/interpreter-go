@@ -6,7 +6,9 @@ import (
 	"strings"
 )
 
-type Interpreter struct{}
+type Interpreter struct {
+	environment *Environment
+}
 
 type RuntimeError struct {
 	token   Token
@@ -14,7 +16,9 @@ type RuntimeError struct {
 }
 
 func NewInterpreter() *Interpreter {
-	return &Interpreter{}
+	return &Interpreter{
+		environment: NewEnvironment(),
+	}
 }
 
 func (e *RuntimeError) Error() string {
@@ -27,6 +31,15 @@ func (i *Interpreter) Evaluate(expr Expr) interface{} {
 
 func (i *Interpreter) VisitLiteralExpr(expr *Literal) interface{} {
 	return expr.Value
+}
+
+func (i *Interpreter) VisitVarStmt(stmt *Var) interface{} {
+	var value interface{}
+	if stmt.initializer != nil {
+		value = i.Evaluate(stmt.initializer)
+	}
+	i.environment.Define(stmt.Name.Lexeme, value)
+	return nil
 }
 
 func (i *Interpreter) VisitGroupingExpr(expr *Grouping) interface{} {
@@ -269,4 +282,12 @@ func (i *Interpreter) VisitPrintStmt(stmt *Print) interface{} {
 	value := i.Evaluate(stmt.Expression)
 	fmt.Println(i.stringify(value))
 	return nil
+}
+
+func (i *Interpreter) VisitVariableExpr(expr *Variable) interface{} {
+	value, err := i.environment.Get(expr.Name)
+	if err != nil {
+		panic(err)
+	}
+	return value
 }

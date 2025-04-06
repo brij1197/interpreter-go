@@ -7,6 +7,7 @@ type Stmt interface {
 type StmtVisitor interface {
 	VisitPrintStmt(stmt *Print) interface{}
 	VisitExpressionStmt(stmt *Expression) interface{}
+	VisitVarStmt(stmt *Var) interface{}
 }
 
 type Print struct {
@@ -23,4 +24,13 @@ type Expression struct {
 
 func (s *Expression) Accept(visitor StmtVisitor) interface{} {
 	return visitor.VisitExpressionStmt(s)
+}
+
+type Var struct {
+	Name        Token
+	initializer Expr
+}
+
+func (v *Var) Accept(visitor StmtVisitor) interface{} {
+	return visitor.VisitVarStmt(v)
 }

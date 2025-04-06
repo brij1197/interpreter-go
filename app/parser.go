@@ -16,10 +16,52 @@ func NewParser(tokens []Token) *Parser {
 	}
 }
 
+func (p *Parser) declaration() (Stmt, error) {
+	if p.match(VAR) {
+		return p.varDeclaration()
+	}
+	return p.statement()
+}
+
+func (p *Parser) varDeclaration() (Stmt, error) {
+	name, err := p.consume(IDENTIFIER, "expect variable name")
+	if err != nil {
+		return nil, err
+	}
+
+	var initializer Expr
+	if p.match(EQUAL) {
+		init, err := p.expression()
+		if err != nil {
+			return nil, err
+		}
+		initializer = init
+	}
+
+	_, err = p.consume(SEMICOLON, "expect ';' after variable declaration")
+	if err != nil {
+		return nil, err
+	}
+
+	return &Var{
+		Name:        *name,
+		initializer: initializer,
+	}, nil
+
+}
+
+func (p *Parser) consume(tokenType TokenType, message string) (*Token, error) {
+	if p.check(tokenType) {
+		token := p.advance()
+		return &token, nil
+	}
+	return nil, fmt.Errorf(message)
+}
+
 func (p *Parser) parse() ([]Stmt, error) {
 	var statements []Stmt
 	for !p.isAtEnd() {
-		stmt, err := p.statement()
+		stmt, err := p.declaration()
 		if err != nil {
 			return nil, err
 		}
@@ -182,13 +224,17 @@ func (p *Parser) primary() (Expr, error) {
 	if p.match(NUMBER, STRING) {
 		return &Literal{Value: p.previous().Literal}, nil
 	}
+	if p.match(IDENTIFIER) {
+		return &Variable{Name: p.previous()}, nil
+	}
 	if p.match(LEFT_PAREN) {
 		expr, err := p.expression()
 		if err != nil {
 			return nil, err
 		}
-		if !p.match(RIGHT_PAREN) {
-			return nil, fmt.Errorf("expect ')' after expression")
+		_, err = p.consume(RIGHT_PAREN, "expect ')' after expression")
+		if err != nil {
+			return nil, err
 		}
 		return &Grouping{Expression: expr}, nil
 	}
