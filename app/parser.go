@@ -16,17 +16,45 @@ func NewParser(tokens []Token) *Parser {
 	}
 }
 
-func (p *Parser) parse() (Expr, error) {
+func (p *Parser) parse() ([]Stmt, error) {
+	var statements []Stmt
+	if !p.isAtEnd() {
+		stmt, err := p.statement()
+		if err != nil {
+			return nil, err
+		}
+		statements = append(statements, stmt)
+	}
+	return statements, nil
+}
+
+func (p *Parser) statement() (Stmt, error) {
+	if p.match(PRINT) {
+		return p.printStatement()
+	}
+	return p.expressionStatement()
+}
+
+func (p *Parser) printStatement() (Stmt, error) {
 	expr, err := p.expression()
 	if err != nil {
 		return nil, err
 	}
-
-	if !p.isAtEnd() {
-		return nil, fmt.Errorf("unexpected token after expression")
+	if !p.match(SEMICOLON) {
+		return nil, fmt.Errorf("expect ';' after expression")
 	}
+	return &Print{Expression: expr}, nil
+}
 
-	return expr, nil
+func (p *Parser) expressionStatement() (Stmt, error) {
+	expr, err := p.expression()
+	if err != nil {
+		return nil, err
+	}
+	if !p.match(SEMICOLON) {
+		return nil, fmt.Errorf("expect ';' after expression")
+	}
+	return &Expression{Expression: expr}, nil
 }
 
 func (p *Parser) expression() (Expr, error) {

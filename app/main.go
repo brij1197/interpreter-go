@@ -29,13 +29,15 @@ func main() {
 		runParse(string(bytes))
 	case "evaluate":
 		runEvaluate(string(bytes))
+	case "run":
+		runParse(string(bytes))
 	default:
 		fmt.Printf("Unknown command: %s\n", command)
 		os.Exit(64)
 	}
 }
 
-func runParse(source string) {
+func runParse(source string) error {
 	scanner := NewScanner(source)
 	tokens, scanErrors := scanner.ScanTokens()
 	if len(scanErrors) > 0 {
@@ -45,13 +47,14 @@ func runParse(source string) {
 		os.Exit(65)
 	}
 	parser := NewParser(tokens)
-	expression, err := parser.parse()
+	statements, err := parser.parse()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %s\n", err)
 		os.Exit(65)
 	}
-	printer := &AstPrinter{}
-	fmt.Println(printer.Print(expression))
+	interpreter := NewInterpreter()
+	interpreter.Interpret(statements)
+	return nil
 }
 
 func runTokenize(source string) {

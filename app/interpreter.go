@@ -184,7 +184,7 @@ func (i *Interpreter) VisitBinaryExpr(expr *Binary) interface{} {
 	return nil
 }
 
-func (i *Interpreter) Interpret(expr Expr) {
+func (i *Interpreter) Interpret(statements []Stmt) {
 	defer func() {
 		if r := recover(); r != nil {
 			if runtimeErr, ok := r.(*RuntimeError); ok {
@@ -195,8 +195,13 @@ func (i *Interpreter) Interpret(expr Expr) {
 			}
 		}
 	}()
-	result := i.Evaluate(expr)
-	fmt.Println(i.stringify(result))
+	for _, statement := range statements {
+		i.execute(statement)
+	}
+}
+
+func (i *Interpreter) execute(stmt Stmt) {
+	stmt.Accept(i)
 }
 
 func (i *Interpreter) isEqual(left, right interface{}) bool {
@@ -254,4 +259,15 @@ func (i *Interpreter) stringify(value interface{}) string {
 	default:
 		return fmt.Sprintf("%v", v)
 	}
+}
+
+func (i *Interpreter) VisitExpressionStmt(stmt *Expression) interface{} {
+	i.Evaluate(stmt.Expression)
+	return nil
+}
+
+func (i *Interpreter) VisitPrintStmt(stmt *Print) interface{} {
+	value := i.Evaluate(stmt.Expression)
+	fmt.Println(i.stringify(value))
+	return nil
 }
