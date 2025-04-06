@@ -30,14 +30,14 @@ func main() {
 	case "evaluate":
 		runEvaluate(string(bytes))
 	case "run":
-		runParse(string(bytes))
+		runProgram(string(bytes))
 	default:
 		fmt.Printf("Unknown command: %s\n", command)
 		os.Exit(64)
 	}
 }
 
-func runParse(source string) error {
+func runProgram(source string) error {
 	scanner := NewScanner(source)
 	tokens, scanErrors := scanner.ScanTokens()
 	if len(scanErrors) > 0 {
@@ -56,6 +56,28 @@ func runParse(source string) error {
 
 	interpreter := NewInterpreter()
 	interpreter.Interpret(statements)
+	return nil
+}
+
+func runParse(source string) error {
+	scanner := NewScanner(source)
+	tokens, scanErrors := scanner.ScanTokens()
+	if len(scanErrors) > 0 {
+		for _, err := range scanErrors {
+			fmt.Fprintln(os.Stderr, err)
+		}
+		os.Exit(65)
+	}
+
+	parser := NewParser(tokens)
+	expr, err := parser.expression()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %s\n", err)
+		os.Exit(65)
+	}
+
+	printer := AstPrinter{}
+	fmt.Println(printer.Print(expr))
 	return nil
 }
 
