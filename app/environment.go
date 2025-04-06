@@ -20,5 +20,5 @@ func (e *Environment) Get(name Token) (interface{}, error) {
 	if val, ok := e.values[name.Lexeme]; ok {
 		return val, nil
 	}
-	return nil, fmt.Errorf("undefined variable '%s'", name.Lexeme)
+	return nil, NewRuntimeError(name, fmt.Sprintf("Undefined variable '%s'.", name.Lexeme))
 }

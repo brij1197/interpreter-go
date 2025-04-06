@@ -11,6 +11,14 @@ func (a *AstPrinter) Print(expr Expr) string {
 	return expr.Accept(a).(string)
 }
 
+func (a *AstPrinter) VisitVariableExpr(expr *Variable) interface{} {
+	return expr.Name.Lexeme
+}
+
+func (a *AstPrinter) VisitUnaryExpr(expr *Unary) interface{} {
+	return a.parenthesize(expr.Operator.Lexeme, expr.Right)
+}
+
 func (a *AstPrinter) VisitBinaryExpr(expr *Binary) interface{} {
 	return a.parenthesize(expr.Operator.Lexeme, expr.Left, expr.Right)
 }
@@ -37,10 +45,6 @@ func (a *AstPrinter) VisitGroupingExpr(expr *Grouping) interface{} {
 	return a.parenthesize("group", expr.Expression)
 }
 
-func (a *AstPrinter) VisitUnaryExpr(expr *Unary) interface{} {
-	return a.parenthesize(expr.Operator.Lexeme, expr.Right)
-}
-
 func (a *AstPrinter) parenthesize(name string, exprs ...Expr) string {
 	var result string
 	result += "(" + name
@@ -50,8 +54,4 @@ func (a *AstPrinter) parenthesize(name string, exprs ...Expr) string {
 	}
 	result += ")"
 	return result
-}
-
-func (a *AstPrinter) VisitVariableExpr(expr *Variable) interface{} {
-	return expr.Name.Lexeme
 }

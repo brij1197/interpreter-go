@@ -55,7 +55,14 @@ func runProgram(source string) error {
 	}
 
 	interpreter := NewInterpreter()
-	interpreter.Interpret(statements)
+	if err := interpreter.Interpret(statements); err != nil {
+		if runtimeErr, ok := err.(*RuntimeError); ok {
+			fmt.Fprintf(os.Stderr, "%s\n", runtimeErr.Error())
+			os.Exit(70)
+		}
+		fmt.Fprintf(os.Stderr, "Error: %s\n", err)
+		os.Exit(70)
+	}
 	return nil
 }
 

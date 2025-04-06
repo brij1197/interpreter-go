@@ -10,19 +10,10 @@ type Interpreter struct {
 	environment *Environment
 }
 
-type RuntimeError struct {
-	token   Token
-	message string
-}
-
 func NewInterpreter() *Interpreter {
 	return &Interpreter{
 		environment: NewEnvironment(),
 	}
-}
-
-func (e *RuntimeError) Error() string {
-	return fmt.Sprintf("%s\n[line %d]", e.message, e.token.Line)
 }
 
 func (i *Interpreter) Evaluate(expr Expr) interface{} {
@@ -197,20 +188,20 @@ func (i *Interpreter) VisitBinaryExpr(expr *Binary) interface{} {
 	return nil
 }
 
-func (i *Interpreter) Interpret(statements []Stmt) {
+func (i *Interpreter) Interpret(statements []Stmt) error {
 	defer func() {
 		if r := recover(); r != nil {
 			if runtimeErr, ok := r.(*RuntimeError); ok {
-				fmt.Fprintln(os.Stderr, runtimeErr.Error())
+				fmt.Fprintf(os.Stderr, runtimeErr.Error())
 				os.Exit(70)
-			} else {
-				panic(r)
 			}
+			panic(r)
 		}
 	}()
 	for _, statement := range statements {
 		i.execute(statement)
 	}
+	return nil
 }
 
 func (i *Interpreter) execute(stmt Stmt) {
