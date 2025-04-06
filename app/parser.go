@@ -28,6 +28,10 @@ func (p *Parser) parse() ([]Stmt, error) {
 	return statements, nil
 }
 
+func (p *Parser) parseExpression() (Expr, error) {
+	return p.expression()
+}
+
 func (p *Parser) statement() (Stmt, error) {
 	if p.match(PRINT) {
 		return p.printStatement()

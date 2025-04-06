@@ -102,7 +102,7 @@ func runEvaluate(source string) {
 		os.Exit(65)
 	}
 	parser := NewParser(tokens)
-	expression, err := parser.parse()
+	expression, err := parser.parseExpression()
 
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error parsing: %v\n", err)
@@ -118,5 +118,6 @@ func runEvaluate(source string) {
 			panic(r)
 		}
 	}()
-	interpreter.Interpret(expression)
+	result := interpreter.Evaluate(expression)
+	fmt.Println(interpreter.stringify(result))
 }
