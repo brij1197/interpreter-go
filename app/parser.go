@@ -16,16 +16,12 @@ func NewParser(tokens []Token) *Parser {
 	}
 }
 
-func (p *Parser) parse() ([]Stmt, error) {
-	var statements []Stmt
-	if !p.isAtEnd() {
-		stmt, err := p.statement()
-		if err != nil {
-			return nil, err
-		}
-		statements = append(statements, stmt)
+func (p *Parser) parse() (Expr, error) {
+	expr, err := p.expression()
+	if err != nil {
+		return nil, err
 	}
-	return statements, nil
+	return expr, nil
 }
 
 func (p *Parser) parseExpression() (Expr, error) {

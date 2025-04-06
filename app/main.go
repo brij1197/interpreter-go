@@ -46,12 +46,16 @@ func runParse(source string) error {
 		}
 		os.Exit(65)
 	}
+
 	parser := NewParser(tokens)
-	statements, err := parser.parse()
+	expr, err := parser.expression()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %s\n", err)
 		os.Exit(65)
 	}
+
+	statements := []Stmt{&Expression{Expression: expr}}
+
 	interpreter := NewInterpreter()
 	interpreter.Interpret(statements)
 	return nil
