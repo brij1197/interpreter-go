@@ -50,7 +50,8 @@ func runParse(source string) error {
 	parser := NewParser(tokens)
 	statements, err := parser.parse()
 	if err != nil {
-		return err
+		fmt.Fprintf(os.Stderr, "Error: %s\n", err)
+		os.Exit(65)
 	}
 
 	interpreter := NewInterpreter()
