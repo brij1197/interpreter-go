@@ -256,9 +256,8 @@ func (i *Interpreter) stringify(value interface{}) string {
 		return v
 	case bool:
 		return fmt.Sprintf("%v", v)
-	default:
-		return fmt.Sprintf("%v", v)
 	}
+	return "unknown"
 }
 
 func (i *Interpreter) VisitExpressionStmt(stmt *Expression) interface{} {

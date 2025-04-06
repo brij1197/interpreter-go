@@ -16,12 +16,16 @@ func NewParser(tokens []Token) *Parser {
 	}
 }
 
-func (p *Parser) parse() (Expr, error) {
-	expr, err := p.expression()
-	if err != nil {
-		return nil, err
+func (p *Parser) parse() ([]Stmt, error) {
+	var statements []Stmt
+	for !p.isAtEnd() {
+		stmt, err := p.statement()
+		if err != nil {
+			return nil, err
+		}
+		statements = append(statements, stmt)
 	}
-	return expr, nil
+	return statements, nil
 }
 
 func (p *Parser) parseExpression() (Expr, error) {
@@ -45,7 +49,7 @@ func (p *Parser) printStatement() (Stmt, error) {
 		return nil, err
 	}
 	if !p.match(SEMICOLON) {
-		return nil, fmt.Errorf("expect ';' after expression")
+		return nil, fmt.Errorf("expect ';' after value")
 	}
 	return &Print{Expression: expr}, nil
 }
@@ -170,10 +174,7 @@ func (p *Parser) primary() (Expr, error) {
 	if p.match(NIL) {
 		return &Literal{Value: nil}, nil
 	}
-	if p.match(NUMBER) {
-		return &Literal{Value: p.previous().Literal}, nil
-	}
-	if p.match(STRING) {
+	if p.match(NUMBER, STRING) {
 		return &Literal{Value: p.previous().Literal}, nil
 	}
 	if p.match(LEFT_PAREN) {
@@ -181,8 +182,8 @@ func (p *Parser) primary() (Expr, error) {
 		if err != nil {
 			return nil, err
 		}
-		if p.match(RIGHT_PAREN) {
-			return &Grouping{Expression: expr}, nil
+		if !p.match(RIGHT_PAREN) {
+			return nil, fmt.Errorf("expect ')' after expression")
 		}
 		return &Grouping{Expression: expr}, nil
 	}
