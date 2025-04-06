@@ -88,61 +88,45 @@ func (i *Interpreter) VisitBinaryExpr(expr *Binary) interface{} {
 	case BANG_EQUAL:
 		return !i.isEqual(left, right)
 	case GREATER:
-		if _, ok := left.(float64); !ok {
-			panic(&RuntimeError{
-				token:   expr.Operator,
-				message: "Operands must be numbers.",
-			})
+		if l, ok := left.(float64); ok {
+			if r, ok := right.(float64); ok {
+				return l > r
+			}
 		}
-		if _, ok := right.(float64); !ok {
-			panic(&RuntimeError{
-				token:   expr.Operator,
-				message: "Operands must be numbers.",
-			})
-		}
-		return left.(float64) > right.(float64)
+		panic(&RuntimeError{
+			token:   expr.Operator,
+			message: "Operands must be numbers.",
+		})
 	case GREATER_EQUAL:
-		if _, ok := left.(float64); !ok {
-			panic(&RuntimeError{
-				token:   expr.Operator,
-				message: "Operands must be numbers.",
-			})
+		if l, ok := left.(float64); ok {
+			if r, ok := right.(float64); ok {
+				return l >= r
+			}
 		}
-		if _, ok := right.(float64); !ok {
-			panic(&RuntimeError{
-				token:   expr.Operator,
-				message: "Operands must be numbers.",
-			})
-		}
-		return left.(float64) >= right.(float64)
+		panic(&RuntimeError{
+			token:   expr.Operator,
+			message: "Operands must be numbers.",
+		})
 	case LESS:
-		if _, ok := left.(float64); !ok {
-			panic(&RuntimeError{
-				token:   expr.Operator,
-				message: "Operands must be numbers.",
-			})
+		if l, ok := left.(float64); ok {
+			if r, ok := right.(float64); ok {
+				return l < r
+			}
 		}
-		if _, ok := right.(float64); !ok {
-			panic(&RuntimeError{
-				token:   expr.Operator,
-				message: "Operands must be numbers.",
-			})
-		}
-		return left.(float64) < right.(float64)
+		panic(&RuntimeError{
+			token:   expr.Operator,
+			message: "Operands must be numbers.",
+		})
 	case LESS_EQUAL:
-		if _, ok := left.(float64); !ok {
-			panic(&RuntimeError{
-				token:   expr.Operator,
-				message: "Operands must be numbers.",
-			})
+		if l, ok := left.(float64); ok {
+			if r, ok := right.(float64); ok {
+				return l <= r
+			}
 		}
-		if _, ok := right.(float64); !ok {
-			panic(&RuntimeError{
-				token:   expr.Operator,
-				message: "Operands must be numbers.",
-			})
-		}
-		return left.(float64) <= right.(float64)
+		panic(&RuntimeError{
+			token:   expr.Operator,
+			message: "Operands must be numbers.",
+		})
 	case PLUS:
 		if lStr, lOk := left.(string); lOk {
 			if rStr, rOk := right.(string); rOk {

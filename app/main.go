@@ -106,8 +106,17 @@ func runEvaluate(source string) {
 
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error parsing: %v\n", err)
-		os.Exit(1)
+		os.Exit(65)
 	}
 	interpreter := NewInterpreter()
+	defer func() {
+		if r := recover(); r != nil {
+			if runtimeErr, ok := r.(*RuntimeError); ok {
+				fmt.Fprintln(os.Stderr, runtimeErr.Error())
+				os.Exit(70)
+			}
+			panic(r)
+		}
+	}()
 	interpreter.Interpret(expression)
 }
