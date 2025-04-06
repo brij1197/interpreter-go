@@ -29,7 +29,11 @@ func (p *Parser) parse() ([]Stmt, error) {
 }
 
 func (p *Parser) parseExpression() (Expr, error) {
-	return p.expression()
+	expr, err := p.expression()
+	if err != nil {
+		return nil, err
+	}
+	return expr, nil
 }
 
 func (p *Parser) statement() (Stmt, error) {
