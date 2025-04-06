@@ -44,6 +44,11 @@ func (p *Parser) statement() (Stmt, error) {
 }
 
 func (p *Parser) printStatement() (Stmt, error) {
+
+	if p.match(SEMICOLON) {
+		return nil, fmt.Errorf("expect expression after 'print'")
+	}
+
 	expr, err := p.expression()
 	if err != nil {
 		return nil, err
