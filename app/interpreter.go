@@ -8,11 +8,14 @@ import (
 
 type Interpreter struct {
 	environment *Environment
+	globals     *Environment
 }
 
 func NewInterpreter() *Interpreter {
+	globals := NewEnvironment(nil)
 	return &Interpreter{
-		environment: NewEnvironment(),
+		environment: globals,
+		globals:     globals,
 	}
 }
 
@@ -293,8 +296,19 @@ func (i *Interpreter) VisitAssignExpr(expr *Assign) interface{} {
 }
 
 func (i *Interpreter) VisitBlockStmt(stmt *Block) interface{} {
-	for _, statement := range stmt.Statements {
-		i.Execute(statement)
-	}
+	i.executeBlock(stmt.Statements, NewEnvironment(i.environment))
 	return nil
+}
+
+func (i *Interpreter) executeBlock(statements []Stmt, environment *Environment) {
+	previous := i.environment
+	defer func() {
+		i.environment = previous
+	}()
+
+	i.environment = environment
+	for _, statement := range statements {
+		i.Execute(statement)
+
+	}
 }
