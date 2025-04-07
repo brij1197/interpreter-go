@@ -95,9 +95,11 @@ func (p *Parser) printStatement() (Stmt, error) {
 	if err != nil {
 		return nil, err
 	}
-	if !p.match(SEMICOLON) {
-		return nil, fmt.Errorf("expect ';' after value")
+	_, err = p.consume(SEMICOLON, "expect ';' after value")
+	if err != nil {
+		return nil, err
 	}
+
 	return &Print{Expression: expr}, nil
 }
 
@@ -106,14 +108,16 @@ func (p *Parser) expressionStatement() (Stmt, error) {
 	if err != nil {
 		return nil, err
 	}
-	if !p.match(SEMICOLON) {
-		return nil, fmt.Errorf("expect ';' after expression")
+	_, err = p.consume(SEMICOLON, "expect ';' after expression")
+	if err != nil {
+		return nil, err
 	}
+
 	return &Expression{Expression: expr}, nil
 }
 
 func (p *Parser) expression() (Expr, error) {
-	return p.equality()
+	return p.assignment()
 }
 
 func (p *Parser) equality() (Expr, error) {
