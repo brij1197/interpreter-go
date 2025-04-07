@@ -63,8 +63,6 @@ func runProgram(source string) error {
 			os.Exit(70)
 			return nil
 		}
-		// fmt.Fprintf(os.Stderr, "Error: %s\n", err)
-		// os.Exit(70)
 	}
 	return nil
 }
