@@ -207,8 +207,8 @@ func (i *Interpreter) Interpret(statements []Stmt) error {
 	return nil
 }
 
-func (i *Interpreter) Execute(stmt Stmt) {
-	stmt.Accept(i)
+func (i *Interpreter) Execute(stmt Stmt) interface{} {
+	return stmt.Accept(i)
 }
 
 func (i *Interpreter) isEqual(left, right interface{}) bool {
@@ -296,19 +296,20 @@ func (i *Interpreter) VisitAssignExpr(expr *Assign) interface{} {
 }
 
 func (i *Interpreter) VisitBlockStmt(stmt *Block) interface{} {
-	i.executeBlock(stmt.Statements, NewEnvironment(i.environment))
-	return nil
+	return i.executeBlock(stmt.Statements, NewEnvironment(i.environment))
 }
 
-func (i *Interpreter) executeBlock(statements []Stmt, environment *Environment) {
+func (i *Interpreter) executeBlock(statements []Stmt, environment *Environment) interface{} {
 	previous := i.environment
+	i.environment = environment
+
 	defer func() {
 		i.environment = previous
 	}()
 
-	i.environment = environment
+	var lastvalue interface{}
 	for _, statement := range statements {
-		i.Execute(statement)
-
+		lastvalue = i.Execute(statement)
 	}
+	return lastvalue
 }
