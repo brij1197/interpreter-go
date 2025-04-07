@@ -79,6 +79,9 @@ func (p *Parser) parseExpression() (Expr, error) {
 }
 
 func (p *Parser) statement() (Stmt, error) {
+	if p.match(LEFT_BRACE) {
+		return p.block()
+	}
 	if p.match(PRINT) {
 		return p.printStatement()
 	}
@@ -302,4 +305,21 @@ func (p *Parser) assignment() (Expr, error) {
 		return nil, fmt.Errorf("invalid assignment target")
 	}
 	return expr, nil
+}
+
+func (p *Parser) block() (Stmt, error) {
+	var statements []Stmt
+
+	for !p.check(RIGHT_BRACE) && !p.isAtEnd() {
+		decl, err := p.declaration()
+		if err != nil {
+			return nil, err
+		}
+		statements = append(statements, decl)
+	}
+	_, err := p.consume(RIGHT_BRACE, "expect '}' after block")
+	if err != nil {
+		return nil, err
+	}
+	return &Block{Statements: statements}, nil
 }

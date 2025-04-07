@@ -45,13 +45,15 @@ func runProgram(source string) error {
 			fmt.Fprintln(os.Stderr, err)
 		}
 		os.Exit(65)
+		return nil
 	}
 
 	parser := NewParser(tokens)
 	statements, err := parser.parse()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %s\n", err)
+		fmt.Fprintf(os.Stderr, "[line %d] Error: %s\n", parser.peek().Line, err)
 		os.Exit(65)
+		return nil
 	}
 
 	interpreter := NewInterpreter()
@@ -59,9 +61,10 @@ func runProgram(source string) error {
 		if runtimeErr, ok := err.(*RuntimeError); ok {
 			fmt.Fprintf(os.Stderr, "%s\n", runtimeErr.Error())
 			os.Exit(70)
+			return nil
 		}
-		fmt.Fprintf(os.Stderr, "Error: %s\n", err)
-		os.Exit(70)
+		// fmt.Fprintf(os.Stderr, "Error: %s\n", err)
+		// os.Exit(70)
 	}
 	return nil
 }

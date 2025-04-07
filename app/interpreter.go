@@ -199,12 +199,12 @@ func (i *Interpreter) Interpret(statements []Stmt) error {
 		}
 	}()
 	for _, statement := range statements {
-		i.execute(statement)
+		i.Execute(statement)
 	}
 	return nil
 }
 
-func (i *Interpreter) execute(stmt Stmt) {
+func (i *Interpreter) Execute(stmt Stmt) {
 	stmt.Accept(i)
 }
 
@@ -290,4 +290,11 @@ func (i *Interpreter) VisitAssignExpr(expr *Assign) interface{} {
 		panic(err)
 	}
 	return value
+}
+
+func (i *Interpreter) VisitBlockStmt(stmt *Block) interface{} {
+	for _, statement := range stmt.Statements {
+		i.Execute(statement)
+	}
+	return nil
 }
