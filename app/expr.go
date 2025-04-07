@@ -27,12 +27,18 @@ type Unary struct {
 	Right    Expr
 }
 
+type Assign struct {
+	Name  Token
+	Value Expr
+}
+
 type ExprVisitor interface {
 	VisitBinaryExpr(expr *Binary) interface{}
 	VisitLiteralExpr(expr *Literal) interface{}
 	VisitGroupingExpr(expr *Grouping) interface{}
 	VisitUnaryExpr(expr *Unary) interface{}
 	VisitVariableExpr(expr *Variable) interface{}
+	VisitAssignExpr(expr *Assign) interface{}
 }
 
 func (b *Binary) Accept(visitor ExprVisitor) interface{} {
@@ -53,4 +59,8 @@ func (u *Unary) Accept(visitor ExprVisitor) interface{} {
 
 func (v *Variable) Accept(visitor ExprVisitor) interface{} {
 	return visitor.VisitVariableExpr(v)
+}
+
+func (v *Assign) Accept(visitor ExprVisitor) interface{} {
+	return visitor.VisitAssignExpr(v)
 }

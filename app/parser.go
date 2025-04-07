@@ -277,3 +277,25 @@ func (p *Parser) peek() Token {
 func (p *Parser) previous() Token {
 	return p.tokens[p.current-1]
 }
+
+func (p *Parser) assignment() (Expr, error) {
+	expr, err := p.equality()
+	if err != nil {
+		return nil, err
+	}
+	if p.match(EQUAL) {
+		value, err := p.assignment()
+		if err != nil {
+			return nil, err
+		}
+
+		if v, ok := expr.(*Variable); ok {
+			return &Assign{
+				Name:  v.Name,
+				Value: value,
+			}, nil
+		}
+		return nil, fmt.Errorf("invalid assignment target")
+	}
+	return expr, nil
+}

@@ -22,3 +22,11 @@ func (e *Environment) Get(name Token) (interface{}, error) {
 	}
 	return nil, NewRuntimeError(name, fmt.Sprintf("Undefined variable '%s'.", name.Lexeme))
 }
+
+func (e *Environment) Assign(name Token, value interface{}) error {
+	if _, exists := e.values[name.Lexeme]; exists {
+		e.values[name.Lexeme] = value
+		return nil
+	}
+	return NewRuntimeError(name, fmt.Sprintf("Undefined variable '%s'.", name.Lexeme))
+}

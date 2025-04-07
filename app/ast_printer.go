@@ -55,3 +55,7 @@ func (a *AstPrinter) parenthesize(name string, exprs ...Expr) string {
 	result += ")"
 	return result
 }
+
+func (a *AstPrinter) VisitAssignExpr(expr *Assign) interface{} {
+	return a.parenthesize("=", &Variable{Name: expr.Name}, expr.Value)
+}

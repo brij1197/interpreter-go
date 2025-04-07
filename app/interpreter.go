@@ -282,3 +282,12 @@ func (i *Interpreter) VisitVariableExpr(expr *Variable) interface{} {
 	}
 	return value
 }
+
+func (i *Interpreter) VisitAssignExpr(expr *Assign) interface{} {
+	value := i.Evaluate(expr.Value)
+	err := i.environment.Assign(expr.Name, value)
+	if err != nil {
+		panic(err)
+	}
+	return value
+}
