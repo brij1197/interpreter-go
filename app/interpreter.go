@@ -313,3 +313,12 @@ func (i *Interpreter) executeBlock(statements []Stmt, environment *Environment) 
 	}
 	return lastvalue
 }
+
+func (i *Interpreter) VisitIfStmt(stmt *If) interface{} {
+	if i.isTruthy(i.Evaluate(stmt.Condition)) {
+		return i.Execute(stmt.ThenBranch)
+	} else if stmt.ElseBranch != nil {
+		return i.Execute(stmt.ElseBranch)
+	}
+	return nil
+}
