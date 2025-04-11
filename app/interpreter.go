@@ -329,6 +329,10 @@ func (i *Interpreter) VisitLogicalExpr(expr *Logical) interface{} {
 		if i.isTruthy(left) {
 			return left
 		}
+	} else {
+		if !i.isTruthy(left) {
+			return left
+		}
 	}
 	return i.Evaluate(expr.Right)
 }
