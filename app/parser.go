@@ -159,7 +159,7 @@ func (p *Parser) expressionStatement() (Stmt, error) {
 }
 
 func (p *Parser) expression() (Expr, error) {
-	return p.or()
+	return p.assignment()
 }
 
 func (p *Parser) or() (Expr, error) {
@@ -294,7 +294,7 @@ func (p *Parser) primary() (Expr, error) {
 		if err != nil {
 			return nil, err
 		}
-		_, err = p.consume(RIGHT_PAREN, "expect ')' after expression")
+		_, err = p.consume(RIGHT_PAREN, "Expect ')' after expression.")
 		if err != nil {
 			return nil, err
 		}
@@ -341,7 +341,7 @@ func (p *Parser) previous() Token {
 }
 
 func (p *Parser) assignment() (Expr, error) {
-	expr, err := p.equality()
+	expr, err := p.or()
 	if err != nil {
 		return nil, err
 	}
