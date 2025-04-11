@@ -322,3 +322,13 @@ func (i *Interpreter) VisitIfStmt(stmt *If) interface{} {
 	}
 	return nil
 }
+
+func (i *Interpreter) VisitLogicalExpr(expr *Logical) interface{} {
+	left := i.Evaluate(expr.Left)
+	if expr.Operator.Type == OR {
+		if i.isTruthy(left) {
+			return left
+		}
+	}
+	return i.Evaluate(expr.Right)
+}

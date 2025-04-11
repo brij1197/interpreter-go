@@ -159,7 +159,23 @@ func (p *Parser) expressionStatement() (Stmt, error) {
 }
 
 func (p *Parser) expression() (Expr, error) {
-	return p.assignment()
+	return p.or()
+}
+
+func (p *Parser) or() (Expr, error) {
+	expr, err := p.equality()
+	if err != nil {
+		return nil, err
+	}
+	for p.match(OR) {
+		operator := p.previous()
+		right, err := p.equality()
+		if err != nil {
+			return nil, err
+		}
+		expr = &Logical{Left: expr, Operator: operator, Right: right}
+	}
+	return expr, nil
 }
 
 func (p *Parser) equality() (Expr, error) {

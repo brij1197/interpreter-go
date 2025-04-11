@@ -32,6 +32,12 @@ type Assign struct {
 	Value Expr
 }
 
+type Logical struct {
+	Left     Expr
+	Operator Token
+	Right    Expr
+}
+
 type ExprVisitor interface {
 	VisitBinaryExpr(expr *Binary) interface{}
 	VisitLiteralExpr(expr *Literal) interface{}
@@ -39,6 +45,7 @@ type ExprVisitor interface {
 	VisitUnaryExpr(expr *Unary) interface{}
 	VisitVariableExpr(expr *Variable) interface{}
 	VisitAssignExpr(expr *Assign) interface{}
+	VisitLogicalExpr(expr *Logical) interface{}
 }
 
 func (b *Binary) Accept(visitor ExprVisitor) interface{} {
@@ -63,4 +70,8 @@ func (v *Variable) Accept(visitor ExprVisitor) interface{} {
 
 func (v *Assign) Accept(visitor ExprVisitor) interface{} {
 	return visitor.VisitAssignExpr(v)
+}
+
+func (l *Logical) Accept(visitor ExprVisitor) interface{} {
+	return visitor.VisitLogicalExpr(l)
 }
