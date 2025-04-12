@@ -336,3 +336,10 @@ func (i *Interpreter) VisitLogicalExpr(expr *Logical) interface{} {
 	}
 	return i.Evaluate(expr.Right)
 }
+
+func (i *Interpreter) VisitWhileStmt(stmt *While) interface{} {
+	for i.isTruthy(i.Evaluate(stmt.Condition)) {
+		i.Execute(stmt.Body)
+	}
+	return nil
+}

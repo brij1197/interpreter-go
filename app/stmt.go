@@ -6,6 +6,7 @@ type StmtVisitor interface {
 	VisitVarStmt(stmt *Var) interface{}
 	VisitBlockStmt(stmt *Block) interface{}
 	VisitIfStmt(stmt *If) interface{}
+	VisitWhileStmt(stmt *While) interface{}
 }
 
 type Stmt interface {
@@ -35,6 +36,11 @@ type If struct {
 	ElseBranch Stmt
 }
 
+type While struct {
+	Condition Expr
+	Body      Stmt
+}
+
 func (stmt *Print) Accept(visitor StmtVisitor) interface{} {
 	return visitor.VisitPrintStmt(stmt)
 }
@@ -53,4 +59,8 @@ func (b *Block) Accept(visitor StmtVisitor) interface{} {
 
 func (i *If) Accept(visitor StmtVisitor) interface{} {
 	return visitor.VisitIfStmt(i)
+}
+
+func (w *While) Accept(visitor StmtVisitor) interface{} {
+	return visitor.VisitWhileStmt(w)
 }
