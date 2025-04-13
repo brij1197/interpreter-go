@@ -13,11 +13,20 @@ type Interpreter struct {
 }
 
 func NewInterpreter() *Interpreter {
-	globals := NewEnvironment(nil)
-	return &Interpreter{
-		environment: globals,
-		globals:     globals,
+	i := &Interpreter{
+		environment: NewEnvironment(nil),
+		globals:     NewEnvironment(nil),
 	}
+	i.environment = i.globals
+
+	i.globals.Define("clock", &NativeFunction{
+		name:  "clock",
+		arity: 0,
+		function: func(arguments []interface{}) interface{} {
+			return float64(time.Now().Unix())
+		},
+	})
+	return i
 }
 
 func (i *Interpreter) Evaluate(expr Expr) interface{} {
@@ -343,16 +352,6 @@ func (i *Interpreter) VisitWhileStmt(stmt *While) interface{} {
 		i.Execute(stmt.Body)
 	}
 	return nil
-}
-
-func (i *Interpreter) InitGlobals() {
-	i.globals.Define("clock", &NativeFunction{
-		name:  "clock",
-		arity: 0,
-		function: func(arguments []interface{}) interface{} {
-			return float64(time.Now().Unix())
-		},
-	})
 }
 
 func (i *Interpreter) VisitCallExpr(expr *Call) interface{} {
