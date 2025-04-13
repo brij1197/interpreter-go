@@ -293,7 +293,7 @@ func (p *Parser) unary() (Expr, error) {
 			Right:    right,
 		}, nil
 	}
-	return p.primary()
+	return p.call()
 }
 
 func (p *Parser) primary() (Expr, error) {
