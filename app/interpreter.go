@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 )
 
 type Interpreter struct {
@@ -342,4 +343,33 @@ func (i *Interpreter) VisitWhileStmt(stmt *While) interface{} {
 		i.Execute(stmt.Body)
 	}
 	return nil
+}
+
+func (i *Interpreter) InitGlobals() {
+	i.globals.Define("clock", &NativeFunction{
+		name:  "clock",
+		arity: 0,
+		function: func(arguments []interface{}) interface{} {
+			return float64(time.Now().Unix())
+		},
+	})
+}
+
+func (i *Interpreter) VisitCallExpr(expr *Call) interface{} {
+	callee := i.Evaluate(expr.Callee)
+
+	var arguments []interface{}
+	for _, argument := range expr.Arguments {
+		arguments = append(arguments, i.Evaluate(argument))
+	}
+
+	function, ok := callee.(Callable)
+	if !ok {
+		return fmt.Errorf("can only call functions and classes")
+	}
+
+	if len(arguments) != function.Arity() {
+		return fmt.Errorf("expected %d arguments but got %d", function.Arity(), len(arguments))
+	}
+	return function.Call(i, arguments)
 }

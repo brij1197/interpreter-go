@@ -38,6 +38,12 @@ type Logical struct {
 	Right    Expr
 }
 
+type Call struct {
+	Callee    Expr
+	Paren     Token
+	Arguments []Expr
+}
+
 type ExprVisitor interface {
 	VisitBinaryExpr(expr *Binary) interface{}
 	VisitLiteralExpr(expr *Literal) interface{}
@@ -46,6 +52,7 @@ type ExprVisitor interface {
 	VisitVariableExpr(expr *Variable) interface{}
 	VisitAssignExpr(expr *Assign) interface{}
 	VisitLogicalExpr(expr *Logical) interface{}
+	VisitCallExpr(expr *Call) interface{}
 }
 
 func (b *Binary) Accept(visitor ExprVisitor) interface{} {
@@ -74,4 +81,8 @@ func (v *Assign) Accept(visitor ExprVisitor) interface{} {
 
 func (l *Logical) Accept(visitor ExprVisitor) interface{} {
 	return visitor.VisitLogicalExpr(l)
+}
+
+func (c *Call) Accept(visitor ExprVisitor) interface{} {
+	return visitor.VisitCallExpr(c)
 }
