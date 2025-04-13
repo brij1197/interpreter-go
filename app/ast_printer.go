@@ -63,3 +63,12 @@ func (a *AstPrinter) VisitAssignExpr(expr *Assign) interface{} {
 func (a *AstPrinter) VisitLogicalExpr(expr *Logical) interface{} {
 	return a.parenthesize(expr.Operator.Lexeme, expr.Left, expr.Right)
 }
+
+func (a *AstPrinter) VisitCallExpr(expr *Call) interface{} {
+	calleeStr := expr.Callee.Accept(a).(string)
+
+	var allExprs []Expr
+	allExprs = append(allExprs, expr.Arguments...)
+
+	return a.parenthesize(calleeStr, allExprs...)
+}

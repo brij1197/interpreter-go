@@ -504,3 +504,50 @@ func (p *Parser) forStatement() (Stmt, error) {
 	return body, nil
 
 }
+
+func (p *Parser) call() (Expr, error) {
+	expr, err := p.primary()
+	if err != nil {
+		return nil, err
+	}
+
+	for {
+		if p.match(LEFT_PAREN) {
+			expr, err = p.finishCall(expr)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			break
+		}
+	}
+	return expr, nil
+}
+
+func (p *Parser) finishCall(callee Expr) (Expr, error) {
+	var arguments []Expr
+
+	if !p.check(RIGHT_PAREN) {
+		for {
+			expr, err := p.expression()
+			if err != nil {
+				return nil, err
+			}
+			arguments = append(arguments, expr)
+			if !p.match(COMMA) {
+				break
+			}
+		}
+	}
+	paren, err := p.consume(RIGHT_PAREN, "Expect ')' after arguments.")
+	if err != nil {
+		return nil, err
+	}
+
+	return &Call{
+		Callee:    callee,
+		Paren:     *paren,
+		Arguments: arguments,
+	}, nil
+
+}
