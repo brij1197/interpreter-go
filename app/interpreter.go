@@ -273,8 +273,11 @@ func (i *Interpreter) stringify(value interface{}) string {
 		return v
 	case bool:
 		return fmt.Sprintf("%v", v)
+	case fmt.Stringer:
+		return v.String()
+	default:
+		return fmt.Sprintf("%v", v)
 	}
-	return "unknown"
 }
 
 func (i *Interpreter) VisitExpressionStmt(stmt *Expression) interface{} {
@@ -291,7 +294,7 @@ func (i *Interpreter) VisitPrintStmt(stmt *Print) interface{} {
 func (i *Interpreter) VisitVariableExpr(expr *Variable) interface{} {
 	value, err := i.environment.Get(expr.Name)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	return value
 }
