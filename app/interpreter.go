@@ -288,7 +288,13 @@ func (i *Interpreter) VisitPrintStmt(stmt *Print) interface{} {
 func (i *Interpreter) VisitVariableExpr(expr *Variable) interface{} {
 	value, err := i.environment.Get(expr.Name)
 	if err != nil {
-		panic(err)
+		if runtimeErr, ok := err.(*RuntimeError); ok {
+			panic(runtimeErr)
+		}
+		panic(&RuntimeError{
+			token:   expr.Name,
+			message: fmt.Sprintf("Undefined variable '%s'.", expr.Name.Lexeme),
+		})
 	}
 	return value
 }
