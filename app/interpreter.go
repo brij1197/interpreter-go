@@ -196,11 +196,13 @@ func (i *Interpreter) VisitBinaryExpr(expr *Binary) interface{} {
 func (i *Interpreter) Interpret(statements []Stmt) error {
 	defer func() {
 		if r := recover(); r != nil {
-			if runtimeErr, ok := r.(*RuntimeError); ok {
-				fmt.Fprintf(os.Stderr, runtimeErr.Error())
+			switch err := r.(type) {
+			case RuntimeError:
+				fmt.Fprintf(os.Stderr, "%s\n[line %d]\n", err.message, err.token.Line)
 				os.Exit(70)
+			default:
+				panic(r)
 			}
-			panic(r)
 		}
 	}()
 	for _, statement := range statements {
@@ -286,7 +288,7 @@ func (i *Interpreter) VisitPrintStmt(stmt *Print) interface{} {
 func (i *Interpreter) VisitVariableExpr(expr *Variable) interface{} {
 	value, err := i.environment.Get(expr.Name)
 	if err != nil {
-		return err
+		panic(err)
 	}
 	return value
 }
@@ -312,11 +314,14 @@ func (i *Interpreter) executeBlock(statements []Stmt, environment *Environment) 
 		i.environment = previous
 	}()
 
-	var lastvalue interface{}
 	for _, statement := range statements {
-		lastvalue = i.Execute(statement)
+		err := i.Execute(statement)
+		if err != nil {
+			return err
+		}
 	}
-	return lastvalue
+
+	return nil
 }
 
 func (i *Interpreter) VisitIfStmt(stmt *If) interface{} {
