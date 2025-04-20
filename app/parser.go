@@ -571,7 +571,7 @@ func (p *Parser) function(kind string) (Stmt, error) {
 		return nil, err
 	}
 
-	_, err = p.consume(RIGHT_PAREN, fmt.Sprintf("Expect '{' before %s body.", kind))
+	_, err = p.consume(LEFT_BRACE, fmt.Sprintf("Expect '{' before %s body.", kind))
 	if err != nil {
 		return nil, err
 	}
