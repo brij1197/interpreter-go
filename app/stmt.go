@@ -7,6 +7,7 @@ type StmtVisitor interface {
 	VisitBlockStmt(stmt *Block) interface{}
 	VisitIfStmt(stmt *If) interface{}
 	VisitWhileStmt(stmt *While) interface{}
+	VisitFunctionStmt(stmt *Function) interface{}
 }
 
 type Stmt interface {
@@ -63,4 +64,8 @@ func (i *If) Accept(visitor StmtVisitor) interface{} {
 
 func (w *While) Accept(visitor StmtVisitor) interface{} {
 	return visitor.VisitWhileStmt(w)
+}
+
+func (s *Function) Accept(visitor StmtVisitor) interface{} {
+	return visitor.VisitFunctionStmt(s)
 }

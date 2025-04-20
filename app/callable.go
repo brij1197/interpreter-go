@@ -5,6 +5,11 @@ type Callable interface {
 	Arity() int
 }
 
+type LoxCallable interface {
+	Call(interpreter *Interpreter, arguments []interface{}) interface{}
+	String() string
+}
+
 type NativeFunction struct {
 	name     string
 	function func([]interface{}) interface{}

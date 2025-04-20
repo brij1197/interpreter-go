@@ -356,19 +356,41 @@ func (i *Interpreter) VisitWhileStmt(stmt *While) interface{} {
 
 func (i *Interpreter) VisitCallExpr(expr *Call) interface{} {
 	callee := i.Evaluate(expr.Callee)
+	if err, ok := callee.(error); ok {
+		return err
+	}
 
 	var arguments []interface{}
 	for _, argument := range expr.Arguments {
-		arguments = append(arguments, i.Evaluate(argument))
+		arg := i.Evaluate(argument)
+		if err, ok := arg.(error); ok {
+			return err
+		}
+		arguments = append(arguments, arg)
 	}
 
-	function, ok := callee.(Callable)
+	function, ok := callee.(LoxCallable)
 	if !ok {
-		return fmt.Errorf("can only call functions and classes")
+		return RuntimeError{
+			token:   expr.Paren,
+			message: "Can only call functions and classes.",
+		}
 	}
 
-	if len(arguments) != function.Arity() {
-		return fmt.Errorf("expected %d arguments but got %d", function.Arity(), len(arguments))
+	// if len(arguments) != function.Arity() {
+	// 	return fmt.Errorf("expected %d arguments but got %d", function.Arity(), len(arguments))
+	// }
+
+	result := function.Call(i, arguments)
+	if err, ok := result.(error); ok {
+		return err
 	}
-	return function.Call(i, arguments)
+
+	return result
+}
+
+func (i *Interpreter) VisitFunctionStmt(stmt *Function) interface{} {
+	function := NewLoxFunction(stmt, i.environment)
+	i.environment.Define(stmt.Name.Lexeme, function)
+	return nil
 }

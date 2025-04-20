@@ -17,6 +17,9 @@ func NewParser(tokens []Token) *Parser {
 }
 
 func (p *Parser) declaration() (Stmt, error) {
+	if p.match(FUN) {
+		return p.function("function")
+	}
 	if p.match(VAR) {
 		return p.varDeclaration()
 	}
@@ -395,7 +398,7 @@ func (p *Parser) block() (Stmt, error) {
 		}
 		statements = append(statements, decl)
 	}
-	_, err := p.consume(RIGHT_BRACE, "expect '}' after block")
+	_, err := p.consume(RIGHT_BRACE, "Expect '}' after block.")
 	if err != nil {
 		return nil, err
 	}
@@ -550,4 +553,35 @@ func (p *Parser) finishCall(callee Expr) (Expr, error) {
 		Arguments: arguments,
 	}, nil
 
+}
+
+func (p *Parser) function(kind string) (Stmt, error) {
+	name, err := p.consume(IDENTIFIER, fmt.Sprintf("Expect %s name.", kind))
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = p.consume(LEFT_PAREN, fmt.Sprintf("Expect '(' after %s name.", kind))
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = p.consume(RIGHT_PAREN, fmt.Sprintf("Expect ')' after parameters."))
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = p.consume(RIGHT_PAREN, fmt.Sprintf("Expect '{' before %s body.", kind))
+	if err != nil {
+		return nil, err
+	}
+
+	blockStmt, err := p.block()
+	if err != nil {
+		return nil, err
+	}
+
+	body := blockStmt.(*Block).Statements
+
+	return &Function{Name: *name, Params: nil, Body: body}, nil
 }
