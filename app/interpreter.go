@@ -165,19 +165,11 @@ func (i *Interpreter) VisitBinaryExpr(expr *Binary) interface{} {
 			if rStr, rOk := right.(string); rOk {
 				return lStr + rStr
 			}
-			panic(&RuntimeError{
-				token:   expr.Operator,
-				message: "Operands must be two numbers or two strings.",
-			})
 		}
 		if lNum, lOk := left.(float64); lOk {
 			if rNum, rOk := right.(float64); rOk {
 				return lNum + rNum
 			}
-			panic(&RuntimeError{
-				token:   expr.Operator,
-				message: "Operands must be two numbers or two strings.",
-			})
 		}
 		panic(&RuntimeError{
 			token:   expr.Operator,

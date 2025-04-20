@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 type Callable interface {
 	Call(interpreter *Interpreter, arguments []interface{}) interface{}
 	Arity() int
@@ -22,4 +24,8 @@ func (n *NativeFunction) Call(_ *Interpreter, arguments []interface{}) interface
 
 func (n *NativeFunction) Arity() int {
 	return n.arity
+}
+
+func (n *NativeFunction) String() string {
+	return fmt.Sprintf("<native fn %s>", n.name)
 }
