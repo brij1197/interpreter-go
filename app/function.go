@@ -35,3 +35,7 @@ func (f *LoxFunction) Call(interpreter *Interpreter, arguments []interface{}) in
 func (f *LoxFunction) String() string {
 	return fmt.Sprintf("<fn %s>", f.declaration.Name.Lexeme)
 }
+
+func (f *LoxFunction) Arity() int {
+	return len(f.declaration.Params)
+}
