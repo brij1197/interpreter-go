@@ -9,7 +9,7 @@ type Callable interface {
 
 type LoxCallable interface {
 	Call(interpreter *Interpreter, arguments []interface{}) interface{}
-	String() string
+	Arity() int
 }
 
 type NativeFunction struct {

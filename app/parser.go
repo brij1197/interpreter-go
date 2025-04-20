@@ -566,6 +566,25 @@ func (p *Parser) function(kind string) (Stmt, error) {
 		return nil, err
 	}
 
+	var parameters []Token
+	if !p.check(RIGHT_PAREN) {
+		for {
+			if len(parameters) >= 255 {
+				return nil, fmt.Errorf("Can't have more than 255 parameters.")
+			}
+
+			param, err := p.consume(IDENTIFIER, "Expect parameter name.")
+			if err != nil {
+				return nil, err
+			}
+			parameters = append(parameters, *param)
+
+			if !p.match(COMMA) {
+				break
+			}
+		}
+	}
+
 	_, err = p.consume(RIGHT_PAREN, fmt.Sprintf("Expect ')' after parameters."))
 	if err != nil {
 		return nil, err
@@ -583,5 +602,5 @@ func (p *Parser) function(kind string) (Stmt, error) {
 
 	body := blockStmt.(*Block).Statements
 
-	return &Function{Name: *name, Params: nil, Body: body}, nil
+	return &Function{Name: *name, Params: parameters, Body: body}, nil
 }

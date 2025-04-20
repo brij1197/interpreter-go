@@ -383,15 +383,18 @@ func (i *Interpreter) VisitCallExpr(expr *Call) interface{} {
 
 	function, ok := callee.(LoxCallable)
 	if !ok {
-		return RuntimeError{
+		panic(&RuntimeError{
 			token:   expr.Paren,
 			message: "Can only call functions and classes.",
-		}
+		})
 	}
 
-	// if len(arguments) != function.Arity() {
-	// 	return fmt.Errorf("expected %d arguments but got %d", function.Arity(), len(arguments))
-	// }
+	if len(arguments) != function.Arity() {
+		panic(&RuntimeError{
+			token:   expr.Paren,
+			message: fmt.Sprintf("Expected %d arguments but got %d", function.Arity(), len(arguments)),
+		})
+	}
 
 	result := function.Call(i, arguments)
 	if err, ok := result.(error); ok {
@@ -402,7 +405,10 @@ func (i *Interpreter) VisitCallExpr(expr *Call) interface{} {
 }
 
 func (i *Interpreter) VisitFunctionStmt(stmt *Function) interface{} {
-	function := NewLoxFunction(stmt, i.environment)
+	function := &LoxFunction{
+		declaration: stmt,
+		closure:     i.environment,
+	}
 	i.environment.Define(stmt.Name.Lexeme, function)
 	return nil
 }

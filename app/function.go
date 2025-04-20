@@ -22,7 +22,13 @@ func NewLoxFunction(declaration *Function, closure *Environment) *LoxFunction {
 
 func (f *LoxFunction) Call(interpreter *Interpreter, arguments []interface{}) interface{} {
 	environment := NewEnvironment(f.closure)
-	interpreter.executeBlock(f.declaration.Body, environment)
+	for i, param := range f.declaration.Params {
+		environment.Define(param.Lexeme, arguments[i])
+	}
+	err := interpreter.executeBlock(f.declaration.Body, environment)
+	if err != nil {
+		panic(err)
+	}
 	return nil
 }
 
