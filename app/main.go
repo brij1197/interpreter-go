@@ -51,7 +51,7 @@ func runProgram(source string) error {
 	parser := NewParser(tokens)
 	statements, err := parser.parse()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "[line %d] Error: %s\n", parser.peek().Line, err)
+		fmt.Fprintf(os.Stderr, "%s\n", err)
 		os.Exit(65)
 		return nil
 	}

@@ -196,23 +196,32 @@ func (i *Interpreter) VisitBinaryExpr(expr *Binary) interface{} {
 func (i *Interpreter) Interpret(statements []Stmt) error {
 	defer func() {
 		if r := recover(); r != nil {
-			switch err := r.(type) {
-			case RuntimeError:
-				fmt.Fprintf(os.Stderr, "%s\n[line %d]\n", err.message, err.token.Line)
+			if runtimeErr, ok := r.(*RuntimeError); ok {
+				fmt.Fprintln(os.Stderr, runtimeErr.Error())
 				os.Exit(70)
-			default:
-				panic(r)
 			}
+			panic(r)
 		}
 	}()
 	for _, statement := range statements {
-		i.Execute(statement)
+		err := i.Execute(statement)
+		if err != nil {
+			if runtimeErr, ok := err.(*RuntimeError); ok {
+				fmt.Fprintln(os.Stderr, runtimeErr.Error())
+				os.Exit(70)
+			}
+			return err
+		}
 	}
 	return nil
 }
 
-func (i *Interpreter) Execute(stmt Stmt) interface{} {
-	return stmt.Accept(i)
+func (i *Interpreter) Execute(stmt Stmt) error {
+	result := stmt.Accept(i)
+	if err, ok := result.(error); ok {
+		return err
+	}
+	return nil
 }
 
 func (i *Interpreter) isEqual(left, right interface{}) bool {
@@ -288,9 +297,6 @@ func (i *Interpreter) VisitPrintStmt(stmt *Print) interface{} {
 func (i *Interpreter) VisitVariableExpr(expr *Variable) interface{} {
 	value, err := i.environment.Get(expr.Name)
 	if err != nil {
-		if runtimeErr, ok := err.(*RuntimeError); ok {
-			panic(runtimeErr)
-		}
 		panic(&RuntimeError{
 			token:   expr.Name,
 			message: fmt.Sprintf("Undefined variable '%s'.", expr.Name.Lexeme),
