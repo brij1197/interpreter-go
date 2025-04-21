@@ -604,3 +604,26 @@ func (p *Parser) function(kind string) (Stmt, error) {
 
 	return &Function{Name: *name, Params: parameters, Body: body}, nil
 }
+
+func (p *Parser) returnStatement() (Stmt, error) {
+	keyword := p.previous()
+	var value Expr
+	var err error
+
+	if !p.check(SEMICOLON) {
+		value, err = p.expression()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	_, err = p.consume(SEMICOLON, "Expect ';' after return value.")
+	if err != nil {
+		return nil, err
+	}
+
+	return &ReturnStmt{
+		Keyword: keyword,
+		Value:   value,
+	}, nil
+}

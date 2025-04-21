@@ -196,20 +196,25 @@ func (i *Interpreter) VisitBinaryExpr(expr *Binary) interface{} {
 func (i *Interpreter) Interpret(statements []Stmt) error {
 	defer func() {
 		if r := recover(); r != nil {
-			if runtimeErr, ok := r.(*RuntimeError); ok {
-				fmt.Fprintln(os.Stderr, runtimeErr.Error())
+			switch v := r.(type) {
+			case *ReturnValue:
+				return
+			case *RuntimeError:
+				fmt.Fprintln(os.Stderr, v.Error())
 				os.Exit(70)
+			default:
+				panic(r)
 			}
-			panic(r)
 		}
 	}()
+
 	for _, statement := range statements {
 		err := i.Execute(statement)
 		if err != nil {
-			if runtimeErr, ok := err.(*RuntimeError); ok {
-				fmt.Fprintln(os.Stderr, runtimeErr.Error())
-				os.Exit(70)
-			}
+			// if runtimeErr, ok := err.(*RuntimeError); ok {
+			// 	fmt.Fprintln(os.Stderr, runtimeErr.Error())
+			// 	os.Exit(70)
+			// }
 			return err
 		}
 	}
@@ -315,7 +320,8 @@ func (i *Interpreter) VisitAssignExpr(expr *Assign) interface{} {
 }
 
 func (i *Interpreter) VisitBlockStmt(stmt *Block) interface{} {
-	return i.executeBlock(stmt.Statements, NewEnvironment(i.environment))
+	i.executeBlock(stmt.Statements, NewEnvironment(i.environment))
+	return nil
 }
 
 func (i *Interpreter) executeBlock(statements []Stmt, environment *Environment) interface{} {
@@ -324,6 +330,9 @@ func (i *Interpreter) executeBlock(statements []Stmt, environment *Environment) 
 
 	defer func() {
 		i.environment = previous
+		if r := recover(); r != nil {
+			panic(r)
+		}
 	}()
 
 	for _, statement := range statements {
@@ -399,12 +408,21 @@ func (i *Interpreter) VisitCallExpr(expr *Call) interface{} {
 		})
 	}
 
-	result := function.Call(i, arguments)
-	if err, ok := result.(error); ok {
-		return err
-	}
+	// defer func(){
+	// 	if r := recover(); r!=nil{
+	// 		if ret, ok := r.(*ReturnValue); ok{
+	// 			return ret.value
+	// 		}
+	// 		panic(r)
+	// 	}
+	// }()
 
-	return result
+	// result := function.Call(i, arguments)
+	// if err, ok := result.(error); ok {
+	// 	return err
+	// }
+
+	return function.Call(i, arguments)
 }
 
 func (i *Interpreter) VisitFunctionStmt(stmt *Function) interface{} {
@@ -414,4 +432,12 @@ func (i *Interpreter) VisitFunctionStmt(stmt *Function) interface{} {
 	}
 	i.environment.Define(stmt.Name.Lexeme, function)
 	return nil
+}
+
+func (i *Interpreter) VisitReturnStmt(stmt *ReturnStmt) interface{} {
+	var value interface{}
+	if stmt.Value != nil {
+		value = i.Evaluate(stmt.Value)
+	}
+	panic(ReturnValue{Value: value})
 }
