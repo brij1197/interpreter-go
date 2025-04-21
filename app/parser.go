@@ -23,7 +23,12 @@ func (p *Parser) declaration() (Stmt, error) {
 	if p.match(VAR) {
 		return p.varDeclaration()
 	}
-	return p.statement()
+	stmt, err := p.statement()
+	if err != nil {
+		p.synchronize()
+		return nil, err
+	}
+	return stmt, nil
 }
 
 func (p *Parser) varDeclaration() (Stmt, error) {
@@ -96,6 +101,9 @@ func (p *Parser) statement() (Stmt, error) {
 	}
 	if p.match(FOR) {
 		return p.forStatement()
+	}
+	if p.match(RETURN) {
+		return p.returnStatement()
 	}
 	return p.expressionStatement()
 }
@@ -532,6 +540,11 @@ func (p *Parser) finishCall(callee Expr) (Expr, error) {
 
 	if !p.check(RIGHT_PAREN) {
 		for {
+
+			if len(arguments) >= 255 {
+				return nil, fmt.Errorf("Can't have more than 255 arguments.")
+			}
+
 			expr, err := p.expression()
 			if err != nil {
 				return nil, err
@@ -626,4 +639,20 @@ func (p *Parser) returnStatement() (Stmt, error) {
 		Keyword: keyword,
 		Value:   value,
 	}, nil
+}
+
+func (p *Parser) synchronize() {
+	p.advance()
+
+	for !p.isAtEnd() {
+		if p.previous().Type == SEMICOLON {
+			return
+		}
+
+		switch p.peek().Type {
+		case CLASS, FUN, VAR, FOR, IF, WHILE, PRINT, RETURN:
+			return
+		}
+		p.advance()
+	}
 }
