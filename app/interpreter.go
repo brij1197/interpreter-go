@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"time"
 )
@@ -193,6 +194,20 @@ func (i *Interpreter) VisitBinaryExpr(expr *Binary) interface{} {
 }
 
 func (i *Interpreter) Interpret(statements []Stmt) error {
+	defer func() {
+		if r := recover(); r != nil {
+			switch v := r.(type) {
+			case *RuntimeError:
+				fmt.Fprintf(os.Stderr, "%s\n [line %d]\n", v.message, v.token.Line)
+				os.Exit(70)
+			case ReturnValue:
+
+			default:
+				panic(r)
+			}
+		}
+	}()
+
 	for _, statement := range statements {
 		result := i.Execute(statement)
 		if _, ok := result.(ReturnValue); ok {
