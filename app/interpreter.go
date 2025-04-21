@@ -391,16 +391,6 @@ func (i *Interpreter) VisitCallExpr(expr *Call) interface{} {
 		})
 	}
 
-	// defer func() {
-	// 	if r := recover(); r != nil {
-	// 		if ret, ok := r.(ReturnValue); ok {
-	// 			_ = ret.Value
-	// 			return
-	// 		}
-	// 		panic(r)
-	// 	}
-	// }()
-
 	return function.Call(i, arguments)
 }
 
