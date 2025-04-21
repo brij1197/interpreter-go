@@ -27,19 +27,22 @@ func (f *LoxFunction) Call(interpreter *Interpreter, arguments []interface{}) in
 		environment.Define(param.Lexeme, arguments[i])
 	}
 
-	var returnValue interface{}
-	defer func() {
-		if r := recover(); r != nil {
-			if ret, ok := r.(*ReturnValue); ok {
-				returnValue = ret.Value
-			} else {
-				panic(r)
-			}
-		}
-	}()
+	// var returnValue interface{}
+	// defer func() {
+	// 	if r := recover(); r != nil {
+	// 		if ret, ok := r.(*ReturnValue); ok {
+	// 			returnValue = ret.Value
+	// 		} else {
+	// 			panic(r)
+	// 		}
+	// 	}
+	// }()
 
-	interpreter.executeBlock(f.declaration.Body, environment)
-	return returnValue
+	result := interpreter.executeBlock(f.declaration.Body, environment)
+	if ret, ok := result.(ReturnValue); ok {
+		return ret.Value
+	}
+	return nil
 }
 
 func (f *LoxFunction) String() string {

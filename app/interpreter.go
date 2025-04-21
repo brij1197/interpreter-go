@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"os"
 	"strings"
 	"time"
 )
@@ -194,39 +193,17 @@ func (i *Interpreter) VisitBinaryExpr(expr *Binary) interface{} {
 }
 
 func (i *Interpreter) Interpret(statements []Stmt) error {
-	defer func() {
-		if r := recover(); r != nil {
-			switch v := r.(type) {
-			case *ReturnValue:
-
-			case *RuntimeError:
-				fmt.Fprintln(os.Stderr, v.Error())
-				os.Exit(70)
-			default:
-				panic(r)
-			}
-		}
-	}()
-
 	for _, statement := range statements {
-		i.Execute(statement)
-		// if err != nil {
-		// 	// if runtimeErr, ok := err.(*RuntimeError); ok {
-		// 	// 	fmt.Fprintln(os.Stderr, runtimeErr.Error())
-		// 	// 	os.Exit(70)
-		// 	// }
-		// 	return err
-		// }
+		result := i.Execute(statement)
+		if _, ok := result.(ReturnValue); ok {
+			continue
+		}
 	}
 	return nil
 }
 
-func (i *Interpreter) Execute(stmt Stmt) error {
-	result := stmt.Accept(i)
-	if err, ok := result.(error); ok {
-		return err
-	}
-	return nil
+func (i *Interpreter) Execute(stmt Stmt) interface{} {
+	return stmt.Accept(i)
 }
 
 func (i *Interpreter) isEqual(left, right interface{}) bool {
@@ -320,11 +297,10 @@ func (i *Interpreter) VisitAssignExpr(expr *Assign) interface{} {
 }
 
 func (i *Interpreter) VisitBlockStmt(stmt *Block) interface{} {
-	i.executeBlock(stmt.Statements, NewEnvironment(i.environment))
-	return nil
+	return i.executeBlock(stmt.Statements, NewEnvironment(i.environment))
 }
 
-func (i *Interpreter) executeBlock(statements []Stmt, environment *Environment) {
+func (i *Interpreter) executeBlock(statements []Stmt, environment *Environment) interface{} {
 	previous := i.environment
 	i.environment = environment
 
@@ -333,8 +309,12 @@ func (i *Interpreter) executeBlock(statements []Stmt, environment *Environment) 
 	}()
 
 	for _, statement := range statements {
-		i.Execute(statement)
+		result := i.Execute(statement)
+		if _, ok := result.(ReturnValue); ok {
+			return result
+		}
 	}
+	return nil
 }
 
 func (i *Interpreter) VisitIfStmt(stmt *If) interface{} {
@@ -428,5 +408,5 @@ func (i *Interpreter) VisitReturnStmt(stmt *ReturnStmt) interface{} {
 	if stmt.Value != nil {
 		value = i.Evaluate(stmt.Value)
 	}
-	panic(ReturnValue{Value: value})
+	return ReturnValue{Value: value}
 }
