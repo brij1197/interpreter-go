@@ -386,11 +386,6 @@ func (i *Interpreter) VisitCallExpr(expr *Call) interface{} {
 	// 	}
 	// }()
 
-	result := function.Call(i, arguments)
-	if err, ok := result.(error); ok {
-		return err
-	}
-
 	return function.Call(i, arguments)
 }
 
