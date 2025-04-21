@@ -324,7 +324,7 @@ func (i *Interpreter) VisitBlockStmt(stmt *Block) interface{} {
 	return nil
 }
 
-func (i *Interpreter) executeBlock(statements []Stmt, environment *Environment) interface{} {
+func (i *Interpreter) executeBlock(statements []Stmt, environment *Environment) {
 	previous := i.environment
 	i.environment = environment
 
@@ -335,8 +335,6 @@ func (i *Interpreter) executeBlock(statements []Stmt, environment *Environment) 
 	for _, statement := range statements {
 		i.Execute(statement)
 	}
-
-	return nil
 }
 
 func (i *Interpreter) VisitIfStmt(stmt *If) interface{} {
@@ -398,15 +396,15 @@ func (i *Interpreter) VisitCallExpr(expr *Call) interface{} {
 		})
 	}
 
-	defer func() {
-		if r := recover(); r != nil {
-			if ret, ok := r.(ReturnValue); ok {
-				_ = ret.Value
-				return
-			}
-			panic(r)
-		}
-	}()
+	// defer func() {
+	// 	if r := recover(); r != nil {
+	// 		if ret, ok := r.(ReturnValue); ok {
+	// 			_ = ret.Value
+	// 			return
+	// 		}
+	// 		panic(r)
+	// 	}
+	// }()
 
 	result := function.Call(i, arguments)
 	if err, ok := result.(error); ok {
