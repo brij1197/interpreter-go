@@ -198,7 +198,7 @@ func (i *Interpreter) Interpret(statements []Stmt) error {
 		if r := recover(); r != nil {
 			switch v := r.(type) {
 			case *ReturnValue:
-				return
+
 			case *RuntimeError:
 				fmt.Fprintln(os.Stderr, v.Error())
 				os.Exit(70)
@@ -209,14 +209,14 @@ func (i *Interpreter) Interpret(statements []Stmt) error {
 	}()
 
 	for _, statement := range statements {
-		err := i.Execute(statement)
-		if err != nil {
-			// if runtimeErr, ok := err.(*RuntimeError); ok {
-			// 	fmt.Fprintln(os.Stderr, runtimeErr.Error())
-			// 	os.Exit(70)
-			// }
-			return err
-		}
+		i.Execute(statement)
+		// if err != nil {
+		// 	// if runtimeErr, ok := err.(*RuntimeError); ok {
+		// 	// 	fmt.Fprintln(os.Stderr, runtimeErr.Error())
+		// 	// 	os.Exit(70)
+		// 	// }
+		// 	return err
+		// }
 	}
 	return nil
 }
@@ -330,9 +330,6 @@ func (i *Interpreter) executeBlock(statements []Stmt, environment *Environment) 
 
 	defer func() {
 		i.environment = previous
-		if r := recover(); r != nil {
-			panic(r)
-		}
 	}()
 
 	for _, statement := range statements {
@@ -383,11 +380,7 @@ func (i *Interpreter) VisitCallExpr(expr *Call) interface{} {
 
 	var arguments []interface{}
 	for _, argument := range expr.Arguments {
-		arg := i.Evaluate(argument)
-		if err, ok := arg.(error); ok {
-			return err
-		}
-		arguments = append(arguments, arg)
+		arguments = append(arguments, i.Evaluate(argument))
 	}
 
 	function, ok := callee.(LoxCallable)
@@ -405,19 +398,20 @@ func (i *Interpreter) VisitCallExpr(expr *Call) interface{} {
 		})
 	}
 
-	// defer func(){
-	// 	if r := recover(); r!=nil{
-	// 		if ret, ok := r.(*ReturnValue); ok{
-	// 			return ret.value
-	// 		}
-	// 		panic(r)
-	// 	}
-	// }()
+	defer func() {
+		if r := recover(); r != nil {
+			if ret, ok := r.(ReturnValue); ok {
+				_ = ret.Value
+				return
+			}
+			panic(r)
+		}
+	}()
 
-	// result := function.Call(i, arguments)
-	// if err, ok := result.(error); ok {
-	// 	return err
-	// }
+	result := function.Call(i, arguments)
+	if err, ok := result.(error); ok {
+		return err
+	}
 
 	return function.Call(i, arguments)
 }
