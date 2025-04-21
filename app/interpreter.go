@@ -336,10 +336,7 @@ func (i *Interpreter) executeBlock(statements []Stmt, environment *Environment) 
 	}()
 
 	for _, statement := range statements {
-		err := i.Execute(statement)
-		if err != nil {
-			return err
-		}
+		i.Execute(statement)
 	}
 
 	return nil

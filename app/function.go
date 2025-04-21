@@ -31,15 +31,13 @@ func (f *LoxFunction) Call(interpreter *Interpreter, arguments []interface{}) in
 		if r := recover(); r != nil {
 			if ret, ok := r.(*ReturnValue); ok {
 				returnValue = ret.Value
+			} else {
+				panic(r)
 			}
-			panic(r)
 		}
 	}()
 
-	err := interpreter.executeBlock(f.declaration.Body, environment)
-	if err != nil {
-		panic(err)
-	}
+	interpreter.executeBlock(f.declaration.Body, environment)
 	return returnValue
 }
 
