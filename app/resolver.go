@@ -59,8 +59,8 @@ func (r *Resolver) resolveLocal(expr Expr, name *Token) {
 }
 
 func (r *Resolver) VisitBinaryExpr(expr *Binary) interface{} {
-	r.Resolve(expr.Left)
-	r.Resolve(expr.Right)
+	r.resolveExpr(expr.Left)
+	r.resolveExpr(expr.Right)
 	return nil
 }
 
@@ -84,6 +84,15 @@ func (r *Resolver) VisitUnaryExpr(expr *Unary) interface{} {
 	return nil
 }
 
+func (r *Resolver) VisitVariableStmt(stmt *Var) interface{} {
+	r.declare(&stmt.Name)
+	if stmt.Initializer != nil {
+		r.resolveExpr(stmt.Initializer)
+	}
+	r.define(&stmt.Name)
+	return nil
+}
+
 func (r *Resolver) VisitVariableExpr(expr *Variable) interface{} {
 	if len(r.scopes) > 0 {
 		scope := r.scopes[len(r.scopes)-1]
@@ -96,15 +105,15 @@ func (r *Resolver) VisitVariableExpr(expr *Variable) interface{} {
 }
 
 func (r *Resolver) VisitAssignExpr(expr *Assign) interface{} {
-	r.Resolve(expr.Value)
+	r.resolveExpr(expr.Value)
 	r.resolveLocal(expr, &expr.Name)
 	return nil
 }
 
 func (r *Resolver) VisitCallExpr(expr *Call) interface{} {
-	r.Resolve(expr.Callee)
+	r.resolveExpr(expr.Callee)
 	for _, argument := range expr.Arguments {
-		r.Resolve(argument)
+		r.resolveExpr(argument)
 	}
 	return nil
 }
@@ -115,23 +124,29 @@ func (r *Resolver) VisitExpressionStmt(stmt *Expression) interface{} {
 }
 
 func (r *Resolver) VisitFunctionStmt(stmt *Function) interface{} {
+	r.declare(&stmt.Name)
+	r.define(&stmt.Name)
+
+	r.resolveFunction(stmt, FUNCTION)
+	return nil
+}
+
+func (r *Resolver) resolveFunction(function *Function, funcType FunctionType) {
 	enclosingFunction := r.currentFunction
-	r.currentFunction = FUNCTION
+	r.currentFunction = funcType
 
 	r.beginScope()
-
-	for _, param := range stmt.Params {
+	for _, param := range function.Params {
 		r.declare(&param)
 		r.define(&param)
 	}
-	for _, statement := range stmt.Body {
-		r.resolveStmt(statement)
+
+	for _, bodyStmt := range function.Body {
+		r.resolveStmt(bodyStmt)
 	}
+
 	r.endScope()
-
 	r.currentFunction = enclosingFunction
-
-	return nil
 }
 
 func (r *Resolver) VisitBlockStmt(stmt *Block) interface{} {
@@ -195,4 +210,8 @@ func (r *Resolver) Resolve(statements interface{}) {
 
 func (r *Resolver) resolveStmt(stmt Stmt) {
 	stmt.Accept(r)
+}
+
+func (r *Resolver) resolveExpr(expr Expr) {
+	expr.Accept(r)
 }
