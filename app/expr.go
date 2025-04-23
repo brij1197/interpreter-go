@@ -86,5 +86,3 @@ func (l *Logical) Accept(visitor ExprVisitor) interface{} {
 func (c *Call) Accept(visitor ExprVisitor) interface{} {
 	return visitor.VisitCallExpr(c)
 }
-
-//

@@ -25,7 +25,7 @@ type Expression struct {
 
 type Var struct {
 	Name        Token
-	initializer Expr
+	Initializer Expr
 }
 
 type Block struct {

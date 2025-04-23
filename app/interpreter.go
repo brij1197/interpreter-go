@@ -10,6 +10,7 @@ import (
 type Interpreter struct {
 	environment *Environment
 	globals     *Environment
+	locals      map[Expr]int
 }
 
 func NewInterpreter() *Interpreter {
@@ -39,8 +40,8 @@ func (i *Interpreter) VisitLiteralExpr(expr *Literal) interface{} {
 
 func (i *Interpreter) VisitVarStmt(stmt *Var) interface{} {
 	var value interface{}
-	if stmt.initializer != nil {
-		value = i.Evaluate(stmt.initializer)
+	if stmt.Initializer != nil {
+		value = i.Evaluate(stmt.Initializer)
 	}
 	i.environment.Define(stmt.Name.Lexeme, value)
 	return nil
@@ -412,4 +413,22 @@ func (i *Interpreter) VisitReturnStmt(stmt *ReturnStmt) interface{} {
 		value = i.Evaluate(stmt.Value)
 	}
 	return ReturnValue{Value: value}
+}
+
+func (i *Interpreter) resolve(expr Expr, depth int) {
+	i.locals[expr] = depth
+}
+
+func (i *Interpreter) lookupVariable(name *Token, expr Expr) interface{} {
+	if distance, ok := i.locals[expr]; ok {
+		return i.environment.GetAt(distance, name.Lexeme)
+	}
+	value, err := i.globals.Get(*name)
+	if err != nil {
+		panic(&RuntimeError{
+			token:   *name,
+			message: fmt.Sprintf("Undefined variable '%s'.", name.Lexeme),
+		})
+	}
+	return value
 }

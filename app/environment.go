@@ -45,3 +45,15 @@ func (e *Environment) Assign(name Token, value interface{}) error {
 		message: fmt.Sprintf("Undefined variable '%s'.", name.Lexeme),
 	}
 }
+
+func (e *Environment) GetAt(distance int, name string) interface{} {
+	return e.ancestor(distance).values[name]
+}
+
+func (e *Environment) ancestor(distance int) *Environment {
+	environment := e
+	for i := 0; i < distance; i++ {
+		environment = environment.enclosing
+	}
+	return environment
+}

@@ -53,7 +53,7 @@ func (p *Parser) varDeclaration() (Stmt, error) {
 
 	return &Var{
 		Name:        *name,
-		initializer: initializer,
+		Initializer: initializer,
 	}, nil
 
 }
