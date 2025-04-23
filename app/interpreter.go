@@ -223,7 +223,11 @@ func (i *Interpreter) Interpret(statements []Stmt) error {
 }
 
 func (i *Interpreter) Execute(stmt Stmt) interface{} {
-	return stmt.Accept(i)
+	result := stmt.Accept(i)
+	if ret, ok := result.(ReturnValue); ok {
+		panic(ret)
+	}
+	return result
 }
 
 func (i *Interpreter) isEqual(left, right interface{}) bool {
@@ -323,8 +327,8 @@ func (i *Interpreter) executeBlock(statements []Stmt, environment *Environment) 
 
 	for _, statement := range statements {
 		result := i.Execute(statement)
-		if _, isReturnValue := result.(ReturnValue); isReturnValue {
-			return result
+		if _, ok := result.(ReturnValue); ok {
+			panic(result)
 		}
 	}
 	return nil
@@ -421,7 +425,7 @@ func (i *Interpreter) VisitReturnStmt(stmt *ReturnStmt) interface{} {
 	if stmt.Value != nil {
 		value = i.Evaluate(stmt.Value)
 	}
-	panic(ReturnValue{Value: value})
+	return ReturnValue{Value: value}
 }
 
 func (i *Interpreter) resolve(expr Expr, depth int) {
