@@ -17,6 +17,7 @@ func NewInterpreter() *Interpreter {
 	i := &Interpreter{
 		environment: NewEnvironment(nil),
 		globals:     NewEnvironment(nil),
+		locals:      make(map[Expr]int),
 	}
 	i.environment = i.globals
 
@@ -293,14 +294,7 @@ func (i *Interpreter) VisitPrintStmt(stmt *Print) interface{} {
 }
 
 func (i *Interpreter) VisitVariableExpr(expr *Variable) interface{} {
-	value, err := i.environment.Get(expr.Name)
-	if err != nil {
-		panic(&RuntimeError{
-			token:   expr.Name,
-			message: fmt.Sprintf("Undefined variable '%s'.", expr.Name.Lexeme),
-		})
-	}
-	return value
+	return i.lookupVariable(&expr.Name, expr)
 }
 
 func (i *Interpreter) VisitAssignExpr(expr *Assign) interface{} {
@@ -425,10 +419,7 @@ func (i *Interpreter) lookupVariable(name *Token, expr Expr) interface{} {
 	}
 	value, err := i.globals.Get(*name)
 	if err != nil {
-		panic(&RuntimeError{
-			token:   *name,
-			message: fmt.Sprintf("Undefined variable '%s'.", name.Lexeme),
-		})
+		panic(&RuntimeError{token: *name, message: err.Error()})
 	}
 	return value
 }
