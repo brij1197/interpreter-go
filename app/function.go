@@ -3,8 +3,9 @@ package main
 import "fmt"
 
 type LoxFunction struct {
-	declaration *Function
-	closure     *Environment
+	declaration   *Function
+	closure       *Environment
+	isInitializer bool
 }
 
 type Function struct {
@@ -23,12 +24,16 @@ func NewLoxFunction(declaration *Function, closure *Environment) *LoxFunction {
 func (f *LoxFunction) Call(interpreter *Interpreter, arguments []interface{}) interface{} {
 	environment := NewEnvironment(f.closure)
 
-	for i, param := range f.declaration.Params {
-		environment.Define(param.Lexeme, arguments[i])
+	for i := 0; i < len(f.declaration.Params); i++ {
+		environment.Define(f.declaration.Params[i].Lexeme, arguments[i])
 	}
 
 	result := interpreter.executeBlock(f.declaration.Body, environment)
-	return result
+	if returnValue, ok := result.(ReturnValue); ok {
+		return returnValue.Value
+	}
+
+	return nil
 }
 
 func (f *LoxFunction) String() string {

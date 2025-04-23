@@ -398,8 +398,9 @@ func (i *Interpreter) VisitCallExpr(expr *Call) interface{} {
 
 func (i *Interpreter) VisitFunctionStmt(stmt *Function) interface{} {
 	function := &LoxFunction{
-		declaration: stmt,
-		closure:     i.environment,
+		declaration:   stmt,
+		closure:       i.environment,
+		isInitializer: false,
 	}
 	i.environment.Define(stmt.Name.Lexeme, function)
 	return nil
@@ -410,7 +411,7 @@ func (i *Interpreter) VisitReturnStmt(stmt *ReturnStmt) interface{} {
 	if stmt.Value != nil {
 		value = i.Evaluate(stmt.Value)
 	}
-	return ReturnValue{Value: value}
+	panic(ReturnValue{Value: value})
 }
 
 func (i *Interpreter) resolve(expr Expr, depth int) {
