@@ -14,12 +14,12 @@ type Interpreter struct {
 }
 
 func NewInterpreter() *Interpreter {
+	globals := NewEnvironment(nil)
 	i := &Interpreter{
-		environment: NewEnvironment(nil),
-		globals:     NewEnvironment(nil),
+		environment: globals,
+		globals:     globals,
 		locals:      make(map[Expr]int),
 	}
-	// i.environment = i.globals
 
 	i.globals.Define("clock", &NativeFunction{
 		name:  "clock",
@@ -44,7 +44,11 @@ func (i *Interpreter) VisitVarStmt(stmt *Var) interface{} {
 	if stmt.Initializer != nil {
 		value = i.Evaluate(stmt.Initializer)
 	}
-	i.environment.Define(stmt.Name.Lexeme, value)
+	if i.environment == i.globals {
+		i.globals.Define(stmt.Name.Lexeme, value)
+	} else {
+		i.environment.Define(stmt.Name.Lexeme, value)
+	}
 	return nil
 }
 
@@ -414,13 +418,18 @@ func (i *Interpreter) resolve(expr Expr, depth int) {
 }
 
 func (i *Interpreter) lookupVariable(name Token, expr Expr) interface{} {
+	fmt.Printf("Looking up variable: %s\n", name.Lexeme)
 	if distance, ok := i.locals[expr]; ok {
+		fmt.Printf("Found in locals at distance: %d\n", distance)
 		return i.environment.GetAt(distance, name.Lexeme)
 	}
+
+	fmt.Printf("Looking in globals for: %s\n", name.Lexeme)
 	value, err := i.globals.Get(name.Lexeme)
 	if err != nil {
 		panic(&RuntimeError{token: name, message: err.Error()})
 	}
+	fmt.Printf("Found in globals: %v\n", value)
 	return value
 }
 
