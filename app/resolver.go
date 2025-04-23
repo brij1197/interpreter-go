@@ -74,13 +74,13 @@ func (r *Resolver) VisitLiteralExpr(expr *Literal) interface{} {
 }
 
 func (r *Resolver) VisitLogicalExpr(expr *Logical) interface{} {
-	r.Resolve(expr.Left)
-	r.Resolve(expr.Right)
+	r.resolveExpr(expr.Left)
+	r.resolveExpr(expr.Right)
 	return nil
 }
 
 func (r *Resolver) VisitUnaryExpr(expr *Unary) interface{} {
-	r.Resolve(expr.Right)
+	r.resolveExpr(expr.Right)
 	return nil
 }
 
@@ -156,36 +156,36 @@ func (r *Resolver) VisitBlockStmt(stmt *Block) interface{} {
 func (r *Resolver) VisitVarStmt(stmt *Var) interface{} {
 	r.declare(&stmt.Name)
 	if stmt.Initializer != nil {
-		r.Resolve(stmt.Initializer)
+		r.resolveExpr(stmt.Initializer)
 	}
 	r.define(&stmt.Name)
 	return nil
 }
 
 func (r *Resolver) VisitIfStmt(stmt *If) interface{} {
-	r.Resolve(stmt.Condition)
-	r.Resolve(stmt.ThenBranch)
+	r.resolveExpr(stmt.Condition)
+	r.resolveStmt(stmt.ThenBranch)
 	if stmt.ElseBranch != nil {
-		r.Resolve(stmt.ElseBranch)
+		r.resolveStmt(stmt.ElseBranch)
 	}
 	return nil
 }
 
 func (r *Resolver) VisitPrintStmt(stmt *Print) interface{} {
-	r.Resolve(stmt.Expression)
+	r.resolveExpr(stmt.Expression)
 	return nil
 }
 
 func (r *Resolver) VisitReturnStmt(stmt *ReturnStmt) interface{} {
 	if stmt.Value != nil {
-		r.Resolve(stmt.Value)
+		r.resolveExpr(stmt.Value)
 	}
 	return nil
 }
 
 func (r *Resolver) VisitWhileStmt(stmt *While) interface{} {
-	r.Resolve(stmt.Condition)
-	r.Resolve(stmt.Body)
+	r.resolveExpr(stmt.Condition)
+	r.resolveStmt(stmt.Body)
 	return nil
 }
 
@@ -210,4 +210,8 @@ func (r *Resolver) resolveStmt(stmt Stmt) {
 
 func (r *Resolver) resolveExpr(expr Expr) {
 	expr.Accept(r)
+}
+
+func (r *Resolver) VisitResolverStmt(stmt *Resolver) interface{} {
+	return nil
 }

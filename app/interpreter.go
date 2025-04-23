@@ -423,3 +423,7 @@ func (i *Interpreter) lookupVariable(name Token, expr Expr) interface{} {
 	}
 	return value
 }
+
+func (i *Interpreter) VisitResolverStmt(stmt *Resolver) interface{} {
+	return nil
+}

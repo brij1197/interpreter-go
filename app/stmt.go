@@ -9,6 +9,7 @@ type StmtVisitor interface {
 	VisitWhileStmt(stmt *While) interface{}
 	VisitFunctionStmt(stmt *Function) interface{}
 	VisitReturnStmt(stmt *ReturnStmt) interface{}
+	VisitResolverStmt(stmt *Resolver) interface{}
 }
 
 type Stmt interface {
@@ -73,4 +74,8 @@ func (s *Function) Accept(visitor StmtVisitor) interface{} {
 
 func (r *ReturnStmt) Accept(visitor StmtVisitor) interface{} {
 	return visitor.VisitReturnStmt(r)
+}
+
+func (r *Resolver) Accept(visitor StmtVisitor) interface{} {
+	return visitor.VisitResolverStmt(r)
 }
