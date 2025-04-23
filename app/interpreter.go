@@ -19,7 +19,7 @@ func NewInterpreter() *Interpreter {
 		globals:     NewEnvironment(nil),
 		locals:      make(map[Expr]int),
 	}
-	i.environment = i.globals
+	// i.environment = i.globals
 
 	i.globals.Define("clock", &NativeFunction{
 		name:  "clock",

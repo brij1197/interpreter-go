@@ -57,6 +57,8 @@ func runProgram(source string) error {
 	}
 
 	interpreter := NewInterpreter()
+	resolver := NewResolver(interpreter)
+	resolver.Resolve(statements)
 	if err := interpreter.Interpret(statements); err != nil {
 		if _, ok := err.(*RuntimeError); ok {
 			os.Exit(70)
