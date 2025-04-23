@@ -294,7 +294,7 @@ func (i *Interpreter) VisitPrintStmt(stmt *Print) interface{} {
 }
 
 func (i *Interpreter) VisitVariableExpr(expr *Variable) interface{} {
-	return i.lookupVariable(&expr.Name, expr)
+	return i.lookupVariable(expr.Name, expr)
 }
 
 func (i *Interpreter) VisitAssignExpr(expr *Assign) interface{} {
@@ -413,13 +413,13 @@ func (i *Interpreter) resolve(expr Expr, depth int) {
 	i.locals[expr] = depth
 }
 
-func (i *Interpreter) lookupVariable(name *Token, expr Expr) interface{} {
+func (i *Interpreter) lookupVariable(name Token, expr Expr) interface{} {
 	if distance, ok := i.locals[expr]; ok {
 		return i.environment.GetAt(distance, name.Lexeme)
 	}
 	value, err := i.globals.Get(name.Lexeme)
 	if err != nil {
-		panic(&RuntimeError{token: *name, message: err.Error()})
+		panic(&RuntimeError{token: name, message: err.Error()})
 	}
 	return value
 }
