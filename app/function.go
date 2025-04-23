@@ -32,9 +32,9 @@ func (f *LoxFunction) Call(interpreter *Interpreter, arguments []interface{}) in
 		if r := recover(); r != nil {
 			if ret, ok := r.(ReturnValue); ok {
 				result = ret.Value
-				return
+			} else {
+				panic(r)
 			}
-			panic(r)
 		}
 	}()
 

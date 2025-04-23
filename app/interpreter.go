@@ -325,13 +325,11 @@ func (i *Interpreter) executeBlock(statements []Stmt, environment *Environment) 
 		i.environment = previous
 	}()
 
+	var result interface{}
 	for _, statement := range statements {
-		result := i.Execute(statement)
-		if _, ok := result.(ReturnValue); ok {
-			panic(result)
-		}
+		result = i.Execute(statement)
 	}
-	return nil
+	return result
 }
 
 func (i *Interpreter) VisitIfStmt(stmt *If) interface{} {
@@ -369,12 +367,12 @@ func (i *Interpreter) VisitWhileStmt(stmt *While) interface{} {
 
 func (i *Interpreter) VisitCallExpr(expr *Call) interface{} {
 	callee := i.Evaluate(expr.Callee)
-	if callee == nil {
-		panic(&RuntimeError{
-			token:   expr.Paren,
-			message: "Can only call functions and classes.",
-		})
-	}
+	// if callee == nil {
+	// 	panic(&RuntimeError{
+	// 		token:   expr.Paren,
+	// 		message: "Can only call functions and classes.",
+	// 	})
+	// }
 
 	arguments := make([]interface{}, 0)
 	for _, argument := range expr.Arguments {
@@ -396,19 +394,7 @@ func (i *Interpreter) VisitCallExpr(expr *Call) interface{} {
 		})
 	}
 
-	var result interface{}
-	defer func() {
-		if r := recover(); r != nil {
-			if ret, ok := r.(ReturnValue); ok {
-				result = ret.Value
-				return
-			}
-			panic(r)
-		}
-	}()
-
-	result = function.Call(i, arguments)
-	return result
+	return function.Call(i, arguments)
 }
 
 func (i *Interpreter) VisitFunctionStmt(stmt *Function) interface{} {
@@ -424,8 +410,13 @@ func (i *Interpreter) VisitReturnStmt(stmt *ReturnStmt) interface{} {
 	var value interface{}
 	if stmt.Value != nil {
 		value = i.Evaluate(stmt.Value)
+
+		if fn, ok := value.(*LoxFunction); ok {
+			value = fn
+		}
 	}
-	return ReturnValue{Value: value}
+
+	panic(ReturnValue{Value: value})
 }
 
 func (i *Interpreter) resolve(expr Expr, depth int) {
@@ -450,4 +441,8 @@ func (i *Interpreter) lookupVariable(name Token, expr Expr) interface{} {
 
 func (i *Interpreter) VisitResolverStmt(stmt *Resolver) interface{} {
 	return nil
+}
+
+func (i *Interpreter) VisitFunctionExpr(expr *Function) interface{} {
+	return NewLoxFunction(expr, i.environment)
 }
