@@ -59,13 +59,13 @@ func (r *Resolver) resolveLocal(expr Expr, name *Token) {
 }
 
 func (r *Resolver) VisitBinaryExpr(expr *Binary) interface{} {
-	r.resolve(expr.Left)
-	r.resolve(expr.Right)
+	r.Resolve(expr.Left)
+	r.Resolve(expr.Right)
 	return nil
 }
 
 func (r *Resolver) VisitGroupingExpr(expr *Grouping) interface{} {
-	r.resolve(expr.Expression)
+	r.Resolve(expr.Expression)
 	return nil
 }
 
@@ -74,13 +74,13 @@ func (r *Resolver) VisitLiteralExpr(expr *Literal) interface{} {
 }
 
 func (r *Resolver) VisitLogicalExpr(expr *Logical) interface{} {
-	r.resolve(expr.Left)
-	r.resolve(expr.Right)
+	r.Resolve(expr.Left)
+	r.Resolve(expr.Right)
 	return nil
 }
 
 func (r *Resolver) VisitUnaryExpr(expr *Unary) interface{} {
-	r.resolve(expr.Right)
+	r.Resolve(expr.Right)
 	return nil
 }
 
@@ -96,48 +96,47 @@ func (r *Resolver) VisitVariableExpr(expr *Variable) interface{} {
 }
 
 func (r *Resolver) VisitAssignExpr(expr *Assign) interface{} {
-	r.resolve(expr.Value)
+	r.Resolve(expr.Value)
 	r.resolveLocal(expr, &expr.Name)
 	return nil
 }
 
 func (r *Resolver) VisitCallExpr(expr *Call) interface{} {
-	r.resolve(expr.Callee)
+	r.Resolve(expr.Callee)
 	for _, argument := range expr.Arguments {
-		r.resolve(argument)
+		r.Resolve(argument)
 	}
 	return nil
 }
 
 func (r *Resolver) VisitExpressionStmt(stmt *Expression) interface{} {
-	r.resolve(stmt.Expression)
+	r.Resolve(stmt.Expression)
 	return nil
 }
 
 func (r *Resolver) VisitFunctionStmt(stmt *Function) interface{} {
-	r.declare(&stmt.Name)
-	r.define(&stmt.Name)
-	r.resolveFunction(stmt, FUNCTION)
-	return nil
-}
-
-func (r *Resolver) resolveFunction(function *Function, funcType FunctionType) {
 	enclosingFunction := r.currentFunction
-	r.currentFunction = funcType
+	r.currentFunction = FUNCTION
 
 	r.beginScope()
-	for _, param := range function.Params {
+
+	for _, param := range stmt.Params {
 		r.declare(&param)
 		r.define(&param)
 	}
-	r.resolve(function.Body)
+	for _, statement := range stmt.Body {
+		r.resolveStmt(statement)
+	}
 	r.endScope()
+
 	r.currentFunction = enclosingFunction
+
+	return nil
 }
 
 func (r *Resolver) VisitBlockStmt(stmt *Block) interface{} {
 	r.beginScope()
-	r.resolve(stmt.Statements)
+	r.Resolve(stmt.Statements)
 	r.endScope()
 	return nil
 }
@@ -145,23 +144,23 @@ func (r *Resolver) VisitBlockStmt(stmt *Block) interface{} {
 func (r *Resolver) VisitVarStmt(stmt *Var) interface{} {
 	r.declare(&stmt.Name)
 	if stmt.Initializer != nil {
-		r.resolve(stmt.Initializer)
+		r.Resolve(stmt.Initializer)
 	}
 	r.define(&stmt.Name)
 	return nil
 }
 
 func (r *Resolver) VisitIfStmt(stmt *If) interface{} {
-	r.resolve(stmt.Condition)
-	r.resolve(stmt.ThenBranch)
+	r.Resolve(stmt.Condition)
+	r.Resolve(stmt.ThenBranch)
 	if stmt.ElseBranch != nil {
-		r.resolve(stmt.ElseBranch)
+		r.Resolve(stmt.ElseBranch)
 	}
 	return nil
 }
 
 func (r *Resolver) VisitPrintStmt(stmt *Print) interface{} {
-	r.resolve(stmt.Expression)
+	r.Resolve(stmt.Expression)
 	return nil
 }
 
@@ -170,18 +169,18 @@ func (r *Resolver) VisitReturnStmt(stmt *ReturnStmt) interface{} {
 		panic("Can't return from top-level code.")
 	}
 	if stmt.Value != nil {
-		r.resolve(stmt.Value)
+		r.Resolve(stmt.Value)
 	}
 	return nil
 }
 
 func (r *Resolver) VisitWhileStmt(stmt *While) interface{} {
-	r.resolve(stmt.Condition)
-	r.resolve(stmt.Body)
+	r.Resolve(stmt.Condition)
+	r.Resolve(stmt.Body)
 	return nil
 }
 
-func (r *Resolver) resolve(statements interface{}) {
+func (r *Resolver) Resolve(statements interface{}) {
 	switch v := statements.(type) {
 	case []Stmt:
 		for _, statement := range v {
