@@ -1,5 +1,10 @@
 package main
 
+import (
+	"fmt"
+	"reflect"
+)
+
 type Resolver struct {
 	interpreter *Interpreter
 	scopes      []map[string]bool
@@ -191,9 +196,11 @@ func (r *Resolver) Resolve(statements interface{}) {
 			r.resolveStmt(statement)
 		}
 	case Stmt:
-		v.Accept(r)
+		r.resolveStmt(v)
 	case Expr:
-		v.Accept(r)
+		r.resolveExpr(v)
+	default:
+		fmt.Println("Unknown type in resolver:", reflect.TypeOf(statements))
 	}
 }
 
