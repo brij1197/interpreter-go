@@ -1,9 +1,8 @@
 package main
 
 type Resolver struct {
-	interpreter     *Interpreter
-	scopes          []map[string]bool
-	currentFunction FunctionType
+	interpreter *Interpreter
+	scopes      []map[string]bool
 }
 
 type FunctionType int
@@ -15,9 +14,8 @@ const (
 
 func NewResolver(interpreter *Interpreter) *Resolver {
 	return &Resolver{
-		interpreter:     interpreter,
-		scopes:          make([]map[string]bool, 0),
-		currentFunction: NONE,
+		interpreter: interpreter,
+		scopes:      make([]map[string]bool, 0),
 	}
 }
 
@@ -36,9 +34,6 @@ func (r *Resolver) declare(name *Token) {
 		return
 	}
 	scope := r.scopes[len(r.scopes)-1]
-	if _, exists := scope[name.Lexeme]; exists {
-		panic("Variable with this name already declared in this scope.")
-	}
 	scope[name.Lexeme] = false
 }
 
@@ -126,26 +121,24 @@ func (r *Resolver) VisitFunctionStmt(stmt *Function) interface{} {
 	r.declare(&stmt.Name)
 	r.define(&stmt.Name)
 
-	r.resolveFunction(stmt, FUNCTION)
+	r.resolveFunction(stmt)
 	return nil
 }
 
-func (r *Resolver) resolveFunction(function *Function, funcType FunctionType) {
-	enclosingFunction := r.currentFunction
-	r.currentFunction = funcType
-
+func (r *Resolver) resolveFunction(function *Function) {
+	enclosingScope := r.scopes
 	r.beginScope()
+
 	for _, param := range function.Params {
 		r.declare(&param)
 		r.define(&param)
 	}
-
 	for _, bodyStmt := range function.Body {
 		r.resolveStmt(bodyStmt)
 	}
 
 	r.endScope()
-	r.currentFunction = enclosingFunction
+	r.scopes = enclosingScope
 }
 
 func (r *Resolver) VisitBlockStmt(stmt *Block) interface{} {
@@ -179,9 +172,6 @@ func (r *Resolver) VisitPrintStmt(stmt *Print) interface{} {
 }
 
 func (r *Resolver) VisitReturnStmt(stmt *ReturnStmt) interface{} {
-	if r.currentFunction == NONE {
-		panic("Can't return from top-level code.")
-	}
 	if stmt.Value != nil {
 		r.Resolve(stmt.Value)
 	}

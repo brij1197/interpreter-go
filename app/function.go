@@ -28,10 +28,7 @@ func (f *LoxFunction) Call(interpreter *Interpreter, arguments []interface{}) in
 	}
 
 	result := interpreter.executeBlock(f.declaration.Body, environment)
-	if ret, ok := result.(ReturnValue); ok {
-		return ret.Value
-	}
-	return nil
+	return result
 }
 
 func (f *LoxFunction) String() string {
