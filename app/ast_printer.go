@@ -72,3 +72,27 @@ func (a *AstPrinter) VisitCallExpr(expr *Call) interface{} {
 
 	return a.parenthesize(calleeStr, allExprs...)
 }
+
+func (a *AstPrinter) VisitFunctionExpr(expr *FunctionExpr) interface{} {
+	var builder strings.Builder
+
+	if expr.Name.Lexeme != "" {
+		builder.WriteString(expr.Name.Lexeme)
+	} else {
+		builder.WriteString("anonymous")
+	}
+
+	builder.WriteString("(")
+
+	for i, param := range expr.Params {
+		if i > 0 {
+			builder.WriteString(", ")
+		}
+		builder.WriteString(param.Lexeme)
+	}
+
+	builder.WriteString(") ")
+	builder.WriteString("{ ... }")
+
+	return builder.String()
+}

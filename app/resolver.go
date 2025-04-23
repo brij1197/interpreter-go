@@ -215,3 +215,27 @@ func (r *Resolver) resolveExpr(expr Expr) {
 func (r *Resolver) VisitResolverStmt(stmt *Resolver) interface{} {
 	return nil
 }
+
+func (r *Resolver) VisitFunctionExpr(expr *FunctionExpr) interface{} {
+	if expr.Name.Lexeme != "" {
+		r.declare(&expr.Name)
+		r.define(&expr.Name)
+	}
+
+	enclosingScope := r.scopes
+	r.beginScope()
+
+	for _, param := range expr.Params {
+		r.declare(&param)
+		r.define(&param)
+	}
+
+	for _, bodyStmt := range expr.Body {
+		r.resolveStmt(bodyStmt)
+	}
+
+	r.endScope()
+	r.scopes = enclosingScope
+
+	return nil
+}

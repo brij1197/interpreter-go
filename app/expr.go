@@ -44,6 +44,12 @@ type Call struct {
 	Arguments []Expr
 }
 
+type FunctionExpr struct {
+	Name   Token
+	Params []Token
+	Body   []Stmt
+}
+
 type ExprVisitor interface {
 	VisitBinaryExpr(expr *Binary) interface{}
 	VisitLiteralExpr(expr *Literal) interface{}
@@ -53,6 +59,7 @@ type ExprVisitor interface {
 	VisitAssignExpr(expr *Assign) interface{}
 	VisitLogicalExpr(expr *Logical) interface{}
 	VisitCallExpr(expr *Call) interface{}
+	VisitFunctionExpr(expr *FunctionExpr) interface{}
 }
 
 func (b *Binary) Accept(visitor ExprVisitor) interface{} {
@@ -85,4 +92,8 @@ func (l *Logical) Accept(visitor ExprVisitor) interface{} {
 
 func (c *Call) Accept(visitor ExprVisitor) interface{} {
 	return visitor.VisitCallExpr(c)
+}
+
+func (e *FunctionExpr) Accept(visitor ExprVisitor) interface{} {
+	return visitor.VisitFunctionExpr(e)
 }
