@@ -418,18 +418,18 @@ func (i *Interpreter) resolve(expr Expr, depth int) {
 }
 
 func (i *Interpreter) lookupVariable(name Token, expr Expr) interface{} {
-	fmt.Printf("Looking up variable: %s\n", name.Lexeme)
+	fmt.Fprintf(os.Stderr, "Looking up variable: %s\n", name.Lexeme)
 	if distance, ok := i.locals[expr]; ok {
-		fmt.Printf("Found in locals at distance: %d\n", distance)
+		fmt.Fprintf(os.Stderr, "Found in locals at distance: %d\n", distance)
 		return i.environment.GetAt(distance, name.Lexeme)
 	}
 
-	fmt.Printf("Looking in globals for: %s\n", name.Lexeme)
+	fmt.Fprintf(os.Stderr, "Looking in globals for: %s\n", name.Lexeme)
 	value, err := i.globals.Get(name.Lexeme)
 	if err != nil {
 		panic(&RuntimeError{token: name, message: err.Error()})
 	}
-	fmt.Printf("Found in globals: %v\n", value)
+	fmt.Fprintf(os.Stderr, "Found in globals: %v\n", value)
 	return value
 }
 
