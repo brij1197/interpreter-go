@@ -202,15 +202,14 @@ func (i *Interpreter) VisitBinaryExpr(expr *Binary) interface{} {
 func (i *Interpreter) Interpret(statements []Stmt) error {
 	defer func() {
 		if r := recover(); r != nil {
-			switch v := r.(type) {
-			case *RuntimeError:
-				fmt.Fprintf(os.Stderr, "%s\n [line %d]\n", v.message, v.token.Line)
-				os.Exit(70)
-			case ReturnValue:
-
-			default:
-				panic(r)
+			if _, ok := r.(ReturnValue); ok {
+				return
 			}
+			if err, ok := r.(*RuntimeError); ok {
+				fmt.Fprintf(os.Stderr, "%s\n [line %d]\n", err.message, err.token.Line)
+				os.Exit(70)
+			}
+			panic(r)
 		}
 	}()
 
@@ -373,7 +372,7 @@ func (i *Interpreter) VisitCallExpr(expr *Call) interface{} {
 		})
 	}
 
-	var arguments []interface{}
+	arguments := make([]interface{}, 0)
 	for _, argument := range expr.Arguments {
 		arguments = append(arguments, i.Evaluate(argument))
 	}
@@ -393,14 +392,25 @@ func (i *Interpreter) VisitCallExpr(expr *Call) interface{} {
 		})
 	}
 
-	return function.Call(i, arguments)
+	var result interface{}
+	defer func() {
+		if r := recover(); r != nil {
+			if ret, ok := r.(ReturnValue); ok {
+				result = ret.Value
+				return
+			}
+			panic(r)
+		}
+	}()
+
+	result = function.Call(i, arguments)
+	return result
 }
 
 func (i *Interpreter) VisitFunctionStmt(stmt *Function) interface{} {
 	function := &LoxFunction{
-		declaration:   stmt,
-		closure:       i.environment,
-		isInitializer: false,
+		declaration: stmt,
+		closure:     i.environment,
 	}
 	i.environment.Define(stmt.Name.Lexeme, function)
 	return nil
