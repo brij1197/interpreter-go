@@ -18,8 +18,8 @@ func (e *Environment) Define(name string, value interface{}) {
 	e.values[name] = value
 }
 
-func (e *Environment) Get(name Token) (interface{}, error) {
-	if value, ok := e.values[name.Lexeme]; ok {
+func (e *Environment) Get(name string) (interface{}, error) {
+	if value, ok := e.values[name]; ok {
 		return value, nil
 	}
 
@@ -27,7 +27,7 @@ func (e *Environment) Get(name Token) (interface{}, error) {
 		return e.enclosing.Get(name)
 	}
 
-	return nil, fmt.Errorf("Undefined variable '%s'.", name.Lexeme)
+	return nil, fmt.Errorf("Undefined variable '%s'.", name)
 }
 
 func (e *Environment) Assign(name Token, value interface{}) error {
