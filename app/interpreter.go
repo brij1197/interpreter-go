@@ -223,11 +223,16 @@ func (i *Interpreter) Interpret(statements []Stmt) error {
 }
 
 func (i *Interpreter) Execute(stmt Stmt) interface{} {
-	result := stmt.Accept(i)
-	if ret, ok := result.(ReturnValue); ok {
-		panic(ret)
-	}
-	return result
+	defer func() {
+		if r := recover(); r != nil {
+			if _, ok := r.(ReturnValue); ok {
+				panic(r)
+			}
+			panic(r)
+		}
+	}()
+
+	return stmt.Accept(i)
 }
 
 func (i *Interpreter) isEqual(left, right interface{}) bool {
@@ -323,6 +328,12 @@ func (i *Interpreter) executeBlock(statements []Stmt, environment *Environment) 
 
 	defer func() {
 		i.environment = previous
+		if r := recover(); r != nil {
+			if _, ok := r.(ReturnValue); ok {
+				panic(r)
+			}
+			panic(r)
+		}
 	}()
 
 	var result interface{}

@@ -32,18 +32,17 @@ func (f *LoxFunction) Call(interpreter *Interpreter, arguments []interface{}) in
 
 	defer func() {
 		interpreter.environment = previousEnv
-
 		if r := recover(); r != nil {
 			if ret, ok := r.(ReturnValue); ok {
-				if funcValue, ok := ret.Value.(*LoxFunction); ok {
-					funcValue.closure = environment
+
+				if fn, ok := ret.Value.(*LoxFunction); ok {
+					fn.closure = environment
 				}
 				panic(ret)
 			}
 			panic(r)
 		}
 	}()
-
 	interpreter.executeBlock(f.declaration.Body, environment)
 	return nil
 }
