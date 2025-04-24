@@ -441,13 +441,10 @@ func (i *Interpreter) VisitResolverStmt(stmt *Resolver) interface{} {
 }
 
 func (i *Interpreter) VisitFunctionExpr(expr *FunctionExpr) interface{} {
-	function := &LoxFunction{
-		declaration: &Function{
-			Name:   expr.Name,
-			Params: expr.Params,
-			Body:   expr.Body,
-		},
-		closure: i.environment,
+	function := &Function{
+		Name:   expr.Name,
+		Params: expr.Params,
+		Body:   expr.Body,
 	}
-	return function
+	return NewLoxFunction(function, i.environment)
 }

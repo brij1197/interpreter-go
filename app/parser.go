@@ -568,87 +568,7 @@ func (p *Parser) finishCall(callee Expr) (Expr, error) {
 
 }
 
-func (p *Parser) function(kind string) (Stmt, error) {
-	name, err := p.consume(IDENTIFIER, fmt.Sprintf("Expect %s name.", kind))
-	if err != nil {
-		return nil, err
-	}
-
-	_, err = p.consume(LEFT_PAREN, fmt.Sprintf("Expect '(' after %s name.", kind))
-	if err != nil {
-		return nil, err
-	}
-
-	var parameters []Token
-	if !p.check(RIGHT_PAREN) {
-		for {
-			if len(parameters) >= 255 {
-				return nil, fmt.Errorf("Can't have more than 255 parameters.")
-			}
-
-			param, err := p.consume(IDENTIFIER, "Expect parameter name.")
-			if err != nil {
-				return nil, err
-			}
-			parameters = append(parameters, *param)
-
-			if !p.match(COMMA) {
-				break
-			}
-		}
-	}
-
-	_, err = p.consume(RIGHT_PAREN, fmt.Sprintf("Expect ')' after parameters."))
-	if err != nil {
-		return nil, err
-	}
-
-	_, err = p.consume(LEFT_BRACE, fmt.Sprintf("Expect '{' before %s body.", kind))
-	if err != nil {
-		return nil, err
-	}
-
-	blockStmt, err := p.block()
-	if err != nil {
-		return nil, err
-	}
-
-	body := blockStmt.(*Block).Statements
-
-	return &Function{Name: *name, Params: parameters, Body: body}, nil
-}
-
-func (p *Parser) returnStatement() (Stmt, error) {
-	keyword := p.previous()
-	var value Expr
-	var err error
-
-	if !p.check(SEMICOLON) {
-		if p.match(FUN) {
-			value, err = p.functionBody("function")
-			if err != nil {
-				return nil, err
-			}
-		} else {
-			value, err = p.expression()
-			if err != nil {
-				return nil, err
-			}
-		}
-	}
-
-	_, err = p.consume(SEMICOLON, "Expect ';' after return value.")
-	if err != nil {
-		return nil, err
-	}
-
-	return &ReturnStmt{
-		Keyword: keyword,
-		Value:   value,
-	}, nil
-}
-
-func (p *Parser) functionBody(kind string) (Expr, error) {
+func (p *Parser) function(kind string) (*Function, error) {
 	var name Token
 	var err error
 
@@ -695,14 +615,100 @@ func (p *Parser) functionBody(kind string) (Expr, error) {
 		return nil, err
 	}
 
-	body := blockStmt.(*Block).Statements
-
-	return &FunctionExpr{
+	return &Function{
 		Name:   name,
 		Params: parameters,
-		Body:   body,
+		Body:   blockStmt.(*Block).Statements,
 	}, nil
 }
+
+func (p *Parser) returnStatement() (Stmt, error) {
+	keyword := p.previous()
+	var value Expr
+
+	if !p.check(SEMICOLON) {
+		if p.match(FUN) {
+			funcStmt, err := p.function("function")
+			if err != nil {
+				return nil, err
+			}
+			value = &FunctionExpr{
+				Name:   funcStmt.Name,
+				Params: funcStmt.Params,
+				Body:   funcStmt.Body,
+			}
+		} else {
+			var err error
+			value, err = p.expression()
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	_, err := p.consume(SEMICOLON, "Expect ';' after return value.")
+	if err != nil {
+		return nil, err
+	}
+
+	return &ReturnStmt{Keyword: keyword, Value: value}, nil
+}
+
+// func (p *Parser) functionBody(kind string) (Expr, error) {
+// 	var name Token
+// 	var err error
+
+// 	if p.check(IDENTIFIER) {
+// 		nameToken, err := p.consume(IDENTIFIER, "Expect "+kind+" name.")
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		name = *nameToken
+// 	}
+
+// 	_, err = p.consume(LEFT_PAREN, "Expect '(' after "+kind+" name.")
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	parameters := make([]Token, 0)
+// 	if !p.check(RIGHT_PAREN) {
+// 		for {
+// 			param, err := p.consume(IDENTIFIER, "Expect parameter name.")
+// 			if err != nil {
+// 				return nil, err
+// 			}
+// 			parameters = append(parameters, *param)
+
+// 			if !p.match(COMMA) {
+// 				break
+// 			}
+// 		}
+// 	}
+
+// 	_, err = p.consume(RIGHT_PAREN, "Expect ')' after parameters.")
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	_, err = p.consume(LEFT_BRACE, "Expect '{' before "+kind+" body.")
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	blockStmt, err := p.block()
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	body := blockStmt.(*Block).Statements
+
+// 	return &FunctionExpr{
+// 		Name:   name,
+// 		Params: parameters,
+// 		Body:   body,
+// 	}, nil
+// }
 
 func (p *Parser) synchronize() {
 	p.advance()

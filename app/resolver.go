@@ -6,8 +6,9 @@ import (
 )
 
 type Resolver struct {
-	interpreter *Interpreter
-	scopes      []map[string]bool
+	interpreter     *Interpreter
+	scopes          []map[string]bool
+	currentFunction FunctionType
 }
 
 type FunctionType int
@@ -19,8 +20,9 @@ const (
 
 func NewResolver(interpreter *Interpreter) *Resolver {
 	return &Resolver{
-		interpreter: interpreter,
-		scopes:      make([]map[string]bool, 0),
+		interpreter:     interpreter,
+		scopes:          make([]map[string]bool, 0),
+		currentFunction: NONE,
 	}
 }
 
@@ -216,26 +218,30 @@ func (r *Resolver) VisitResolverStmt(stmt *Resolver) interface{} {
 	return nil
 }
 
+func (r *Resolver) resolveStatements(statements []Stmt) {
+	for _, statement := range statements {
+		r.resolveStmt(statement)
+	}
+}
+
 func (r *Resolver) VisitFunctionExpr(expr *FunctionExpr) interface{} {
+	enclosingFunction := r.currentFunction
+	r.currentFunction = FUNCTION
+
+	r.beginScope()
 	if expr.Name.Lexeme != "" {
 		r.declare(&expr.Name)
 		r.define(&expr.Name)
 	}
-
-	enclosingScope := r.scopes
-	r.beginScope()
 
 	for _, param := range expr.Params {
 		r.declare(&param)
 		r.define(&param)
 	}
 
-	for _, bodyStmt := range expr.Body {
-		r.resolveStmt(bodyStmt)
-	}
-
+	r.resolveStatements(expr.Body)
 	r.endScope()
-	r.scopes = enclosingScope
 
+	r.currentFunction = enclosingFunction
 	return nil
 }
