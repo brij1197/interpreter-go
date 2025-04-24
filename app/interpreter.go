@@ -311,10 +311,16 @@ func (i *Interpreter) VisitVariableExpr(expr *Variable) interface{} {
 
 func (i *Interpreter) VisitAssignExpr(expr *Assign) interface{} {
 	value := i.Evaluate(expr.Value)
-	err := i.environment.Assign(expr.Name, value)
-	if err != nil {
-		panic(err)
+
+	if distance, ok := i.locals[expr]; ok {
+		i.environment.AssignAt(distance, expr.Name, value)
+	} else {
+		err := i.globals.Assign(expr.Name, value)
+		if err != nil {
+			panic(err)
+		}
 	}
+
 	return value
 }
 

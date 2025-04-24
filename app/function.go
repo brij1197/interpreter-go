@@ -32,12 +32,6 @@ func (f *LoxFunction) Call(interpreter *Interpreter, arguments []interface{}) in
 
 	defer func() {
 		interpreter.environment = previousEnv
-		if r := recover(); r != nil {
-			if ret, ok := r.(ReturnValue); ok {
-				panic(ret)
-			}
-			panic(r)
-		}
 	}()
 
 	result := interpreter.executeBlock(f.declaration.Body, environment)

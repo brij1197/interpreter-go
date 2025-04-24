@@ -60,9 +60,6 @@ func (r *Resolver) resolveLocal(expr Expr, name *Token) {
 			return
 		}
 	}
-	if _, ok := r.globals[name.Lexeme]; ok {
-		r.interpreter.resolve(expr, -1)
-	}
 }
 
 func (r *Resolver) VisitBinaryExpr(expr *Binary) interface{} {

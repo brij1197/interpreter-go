@@ -40,6 +40,11 @@ func (e *Environment) Assign(name Token, value interface{}) error {
 		return e.enclosing.Assign(name, value)
 	}
 
+	if e.enclosing == nil {
+		e.values[name.Lexeme] = value
+		return nil
+	}
+
 	return &RuntimeError{
 		token:   name,
 		message: fmt.Sprintf("Undefined variable '%s'.", name.Lexeme),
@@ -56,4 +61,8 @@ func (e *Environment) ancestor(distance int) *Environment {
 		environment = environment.enclosing
 	}
 	return environment
+}
+
+func (e *Environment) AssignAt(distance int, name Token, value interface{}) {
+	e.ancestor(distance).values[name.Lexeme] = value
 }
