@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"os"
-	"strings"
 	"time"
 )
 
@@ -273,25 +272,19 @@ func (i *Interpreter) isTruthy(object interface{}) bool {
 	return true
 }
 
-func (i *Interpreter) stringify(value interface{}) string {
-	if value == nil {
+func (i *Interpreter) stringify(obj interface{}) string {
+	if obj == nil {
 		return "nil"
 	}
 
-	switch v := value.(type) {
-	case float64:
-		text := fmt.Sprintf("%g", v)
-		text = strings.TrimSuffix(text, ".0")
-		return text
-	case string:
-		return v
-	case bool:
-		return fmt.Sprintf("%v", v)
-	case fmt.Stringer:
-		return v.String()
-	default:
-		return fmt.Sprintf("%v", v)
+	if num, ok := obj.(float64); ok {
+		if num == float64(int64(num)) {
+			return fmt.Sprintf("%d", int64(num))
+		}
+		return fmt.Sprintf("%g", num)
 	}
+
+	return fmt.Sprintf("%v", obj)
 }
 
 func (i *Interpreter) VisitExpressionStmt(stmt *Expression) interface{} {
@@ -301,7 +294,17 @@ func (i *Interpreter) VisitExpressionStmt(stmt *Expression) interface{} {
 
 func (i *Interpreter) VisitPrintStmt(stmt *Print) interface{} {
 	value := i.Evaluate(stmt.Expression)
-	fmt.Println(i.stringify(value))
+
+	if num, ok := value.(float64); ok {
+		if num == float64(int64(num)) {
+			fmt.Printf("%d\n", int64(num))
+		} else {
+			fmt.Printf("%g\n", num)
+		}
+	} else {
+		fmt.Printf("%v\n", i.stringify(value))
+	}
+
 	return nil
 }
 
