@@ -398,10 +398,7 @@ func (i *Interpreter) VisitCallExpr(expr *Call) interface{} {
 }
 
 func (i *Interpreter) VisitFunctionStmt(stmt *Function) interface{} {
-	function := &LoxFunction{
-		declaration: stmt,
-		closure:     i.environment,
-	}
+	function := NewLoxFunction(stmt, i.environment)
 	i.environment.Define(stmt.Name.Lexeme, function)
 	return nil
 }
@@ -411,8 +408,8 @@ func (i *Interpreter) VisitReturnStmt(stmt *ReturnStmt) interface{} {
 	if stmt.Value != nil {
 		value = i.Evaluate(stmt.Value)
 
-		if fn, ok := value.(*LoxFunction); ok {
-			value = fn
+		if funcStmt, ok := value.(*Function); ok {
+			value = NewLoxFunction(funcStmt, i.environment)
 		}
 	}
 
