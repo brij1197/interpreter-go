@@ -133,19 +133,20 @@ func (r *Resolver) VisitFunctionStmt(stmt *Function) interface{} {
 }
 
 func (r *Resolver) resolveFunction(function *Function) {
-	enclosingScope := r.scopes
+	enclosingFunction := r.currentFunction
+	r.currentFunction = FUNCTION
+
 	r.beginScope()
 
 	for _, param := range function.Params {
 		r.declare(&param)
 		r.define(&param)
 	}
-	for _, bodyStmt := range function.Body {
-		r.resolveStmt(bodyStmt)
-	}
+
+	r.resolveStatements(function.Body)
 
 	r.endScope()
-	r.scopes = enclosingScope
+	r.currentFunction = enclosingFunction
 }
 
 func (r *Resolver) VisitBlockStmt(stmt *Block) interface{} {

@@ -329,8 +329,8 @@ func (i *Interpreter) executeBlock(statements []Stmt, environment *Environment) 
 	defer func() {
 		i.environment = previous
 		if r := recover(); r != nil {
-			if _, ok := r.(ReturnValue); ok {
-				panic(r)
+			if ret, ok := r.(ReturnValue); ok {
+				panic(ret)
 			}
 			panic(r)
 		}
@@ -339,6 +339,9 @@ func (i *Interpreter) executeBlock(statements []Stmt, environment *Environment) 
 	var result interface{}
 	for _, statement := range statements {
 		result = i.Execute(statement)
+		if _, ok := result.(ReturnValue); ok {
+			return result
+		}
 	}
 	return result
 }
@@ -419,7 +422,7 @@ func (i *Interpreter) VisitReturnStmt(stmt *ReturnStmt) interface{} {
 	if stmt.Value != nil {
 		value = i.Evaluate(stmt.Value)
 	}
-	panic(ReturnValue{Value: value})
+	return ReturnValue{Value: value}
 }
 
 func (i *Interpreter) resolve(expr Expr, depth int) {
@@ -427,18 +430,14 @@ func (i *Interpreter) resolve(expr Expr, depth int) {
 }
 
 func (i *Interpreter) lookupVariable(name Token, expr Expr) interface{} {
-	fmt.Fprintf(os.Stderr, "Looking up variable: %s\n", name.Lexeme)
 	if distance, ok := i.locals[expr]; ok {
-		fmt.Fprintf(os.Stderr, "Found in locals at distance: %d\n", distance)
 		return i.environment.GetAt(distance, name.Lexeme)
 	}
 
-	fmt.Fprintf(os.Stderr, "Looking in globals for: %s\n", name.Lexeme)
 	value, err := i.globals.Get(name.Lexeme)
 	if err != nil {
 		panic(&RuntimeError{token: name, message: err.Error()})
 	}
-	fmt.Fprintf(os.Stderr, "Found in globals: %v\n", value)
 	return value
 }
 

@@ -34,17 +34,19 @@ func (f *LoxFunction) Call(interpreter *Interpreter, arguments []interface{}) in
 		interpreter.environment = previousEnv
 		if r := recover(); r != nil {
 			if ret, ok := r.(ReturnValue); ok {
-
-				if fn, ok := ret.Value.(*LoxFunction); ok {
-					fn.closure = environment
-				}
 				panic(ret)
 			}
 			panic(r)
 		}
 	}()
-	interpreter.executeBlock(f.declaration.Body, environment)
-	return nil
+
+	result := interpreter.executeBlock(f.declaration.Body, environment)
+
+	if ret, ok := result.(ReturnValue); ok {
+		return ret.Value
+	}
+
+	return result
 }
 
 func (f *LoxFunction) String() string {
