@@ -27,19 +27,25 @@ func (f *LoxFunction) Call(interpreter *Interpreter, arguments []interface{}) in
 		environment.Define(f.declaration.Params[i].Lexeme, arguments[i])
 	}
 
-	var result interface{}
+	previousEnv := interpreter.environment
+	interpreter.environment = environment
+
 	defer func() {
+		interpreter.environment = previousEnv
+
 		if r := recover(); r != nil {
 			if ret, ok := r.(ReturnValue); ok {
-				result = ret.Value
-			} else {
-				panic(r)
+				if funcValue, ok := ret.Value.(*LoxFunction); ok {
+					funcValue.closure = environment
+				}
+				panic(ret)
 			}
+			panic(r)
 		}
 	}()
 
 	interpreter.executeBlock(f.declaration.Body, environment)
-	return result
+	return nil
 }
 
 func (f *LoxFunction) String() string {

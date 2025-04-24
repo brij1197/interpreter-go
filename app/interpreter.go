@@ -407,12 +407,7 @@ func (i *Interpreter) VisitReturnStmt(stmt *ReturnStmt) interface{} {
 	var value interface{}
 	if stmt.Value != nil {
 		value = i.Evaluate(stmt.Value)
-
-		if funcStmt, ok := value.(*Function); ok {
-			value = NewLoxFunction(funcStmt, i.environment)
-		}
 	}
-
 	panic(ReturnValue{Value: value})
 }
 
