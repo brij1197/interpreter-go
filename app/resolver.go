@@ -9,6 +9,7 @@ type Resolver struct {
 	interpreter     *Interpreter
 	scopes          []map[string]bool
 	currentFunction FunctionType
+	globals         map[string]bool
 }
 
 type FunctionType int
@@ -23,6 +24,7 @@ func NewResolver(interpreter *Interpreter) *Resolver {
 		interpreter:     interpreter,
 		scopes:          make([]map[string]bool, 0),
 		currentFunction: NONE,
+		globals:         make(map[string]bool),
 	}
 }
 
@@ -57,6 +59,9 @@ func (r *Resolver) resolveLocal(expr Expr, name *Token) {
 			r.interpreter.resolve(expr, len(r.scopes)-1-i)
 			return
 		}
+	}
+	if _, ok := r.globals[name.Lexeme]; ok {
+		r.interpreter.resolve(expr, -1)
 	}
 }
 
@@ -157,11 +162,15 @@ func (r *Resolver) VisitBlockStmt(stmt *Block) interface{} {
 }
 
 func (r *Resolver) VisitVarStmt(stmt *Var) interface{} {
-	r.declare(&stmt.Name)
-	if stmt.Initializer != nil {
-		r.resolveExpr(stmt.Initializer)
+	if len(r.scopes) == 0 {
+		r.globals[stmt.Name.Lexeme] = true
+	} else {
+		r.declare(&stmt.Name)
+		if stmt.Initializer != nil {
+			r.resolveExpr(stmt.Initializer)
+		}
+		r.define(&stmt.Name)
 	}
-	r.define(&stmt.Name)
 	return nil
 }
 

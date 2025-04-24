@@ -431,6 +431,13 @@ func (i *Interpreter) resolve(expr Expr, depth int) {
 
 func (i *Interpreter) lookupVariable(name Token, expr Expr) interface{} {
 	if distance, ok := i.locals[expr]; ok {
+		if distance == -1 {
+			value, err := i.globals.Get(name.Lexeme)
+			if err != nil {
+				panic(&RuntimeError{token: name, message: err.Error()})
+			}
+			return value
+		}
 		return i.environment.GetAt(distance, name.Lexeme)
 	}
 
