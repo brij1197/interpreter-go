@@ -10,6 +10,7 @@ type Resolver struct {
 	scopes          []map[string]bool
 	currentFunction FunctionType
 	globals         map[string]bool
+	inInitializer   map[string]bool
 }
 
 type FunctionType int
@@ -25,6 +26,7 @@ func NewResolver(interpreter *Interpreter) *Resolver {
 		scopes:          make([]map[string]bool, 0),
 		currentFunction: NONE,
 		globals:         make(map[string]bool),
+		inInitializer:   make(map[string]bool),
 	}
 }
 
@@ -43,19 +45,37 @@ func (r *Resolver) declare(name *Token) {
 		return
 	}
 	scope := r.scopes[len(r.scopes)-1]
+	if _, exists := scope[name.Lexeme]; exists {
+		panic(
+			&ParseError{
+				token:   *name,
+				message: "Variable already declared in this scope.",
+			},
+		)
+	}
 	scope[name.Lexeme] = false
+	r.inInitializer[name.Lexeme] = true
 }
 
 func (r *Resolver) define(name *Token) {
 	if len(r.scopes) == 0 {
 		return
 	}
-	r.scopes[len(r.scopes)-1][name.Lexeme] = true
+	scope := r.scopes[len(r.scopes)-1]
+	scope[name.Lexeme] = true
+	delete(r.inInitializer, name.Lexeme)
+
 }
 
 func (r *Resolver) resolveLocal(expr Expr, name *Token) {
 	for i := len(r.scopes) - 1; i >= 0; i-- {
 		if _, ok := r.scopes[i][name.Lexeme]; ok {
+			if len(r.scopes) > 0 && r.inInitializer[name.Lexeme] {
+				panic(&ParseError{
+					token:   *name,
+					message: "Can't read local variable in its own initializer.",
+				})
+			}
 			r.interpreter.resolve(expr, len(r.scopes)-1-i)
 			return
 		}
@@ -159,15 +179,11 @@ func (r *Resolver) VisitBlockStmt(stmt *Block) interface{} {
 }
 
 func (r *Resolver) VisitVarStmt(stmt *Var) interface{} {
-	if len(r.scopes) == 0 {
-		r.globals[stmt.Name.Lexeme] = true
-	} else {
-		r.declare(&stmt.Name)
-		if stmt.Initializer != nil {
-			r.resolveExpr(stmt.Initializer)
-		}
-		r.define(&stmt.Name)
+	r.declare(&stmt.Name)
+	if stmt.Initializer != nil {
+		r.resolveExpr(stmt.Initializer)
 	}
+	r.define(&stmt.Name)
 	return nil
 }
 

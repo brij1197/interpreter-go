@@ -58,7 +58,19 @@ func runProgram(source string) error {
 
 	interpreter := NewInterpreter()
 	resolver := NewResolver(interpreter)
+
+	defer func() {
+		if r := recover(); r != nil {
+			if parseErr, ok := r.(*ParseError); ok {
+				fmt.Fprintln(os.Stderr, parseErr.Error())
+				os.Exit(65)
+			}
+			panic(r)
+		}
+	}()
+
 	resolver.Resolve(statements)
+
 	if err := interpreter.Interpret(statements); err != nil {
 		if _, ok := err.(*RuntimeError); ok {
 			os.Exit(70)
