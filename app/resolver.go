@@ -120,7 +120,7 @@ func (r *Resolver) VisitVariableStmt(stmt *Var) interface{} {
 func (r *Resolver) VisitVariableExpr(expr *Variable) interface{} {
 	if len(r.scopes) > 0 {
 		if initialized, ok := r.scopes[len(r.scopes)-1][expr.Name.Lexeme]; ok && !initialized {
-			panic("Can't read local variable in its own initializer.")
+			panic(NewParseError(expr.Name, "Can't read local variable in its own initializer."))
 		}
 	}
 	r.resolveLocal(expr, &expr.Name)
