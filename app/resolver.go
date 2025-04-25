@@ -89,7 +89,7 @@ func (r *Resolver) VisitBinaryExpr(expr *Binary) interface{} {
 }
 
 func (r *Resolver) VisitGroupingExpr(expr *Grouping) interface{} {
-	r.Resolve(expr.Expression)
+	r.resolveExpr(expr.Expression)
 	return nil
 }
 
@@ -142,7 +142,7 @@ func (r *Resolver) VisitCallExpr(expr *Call) interface{} {
 }
 
 func (r *Resolver) VisitExpressionStmt(stmt *Expression) interface{} {
-	r.Resolve(stmt.Expression)
+	r.resolveExpr(stmt.Expression)
 	return nil
 }
 
@@ -202,6 +202,9 @@ func (r *Resolver) VisitPrintStmt(stmt *Print) interface{} {
 }
 
 func (r *Resolver) VisitReturnStmt(stmt *ReturnStmt) interface{} {
+	if r.currentFunction == NONE {
+		panic(NewParseError(stmt.Keyword, "Can't return from top-level code."))
+	}
 	if stmt.Value != nil {
 		r.resolveExpr(stmt.Value)
 	}
