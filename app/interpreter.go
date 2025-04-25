@@ -390,12 +390,6 @@ func (i *Interpreter) VisitWhileStmt(stmt *While) interface{} {
 
 func (i *Interpreter) VisitCallExpr(expr *Call) interface{} {
 	callee := i.Evaluate(expr.Callee)
-	// if callee == nil {
-	// 	panic(&RuntimeError{
-	// 		token:   expr.Paren,
-	// 		message: "Can only call functions and classes.",
-	// 	})
-	// }
 
 	arguments := make([]interface{}, 0)
 	for _, argument := range expr.Arguments {

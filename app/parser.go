@@ -654,62 +654,6 @@ func (p *Parser) returnStatement() (Stmt, error) {
 	return &ReturnStmt{Keyword: keyword, Value: value}, nil
 }
 
-// func (p *Parser) functionBody(kind string) (Expr, error) {
-// 	var name Token
-// 	var err error
-
-// 	if p.check(IDENTIFIER) {
-// 		nameToken, err := p.consume(IDENTIFIER, "Expect "+kind+" name.")
-// 		if err != nil {
-// 			return nil, err
-// 		}
-// 		name = *nameToken
-// 	}
-
-// 	_, err = p.consume(LEFT_PAREN, "Expect '(' after "+kind+" name.")
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	parameters := make([]Token, 0)
-// 	if !p.check(RIGHT_PAREN) {
-// 		for {
-// 			param, err := p.consume(IDENTIFIER, "Expect parameter name.")
-// 			if err != nil {
-// 				return nil, err
-// 			}
-// 			parameters = append(parameters, *param)
-
-// 			if !p.match(COMMA) {
-// 				break
-// 			}
-// 		}
-// 	}
-
-// 	_, err = p.consume(RIGHT_PAREN, "Expect ')' after parameters.")
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	_, err = p.consume(LEFT_BRACE, "Expect '{' before "+kind+" body.")
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	blockStmt, err := p.block()
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	body := blockStmt.(*Block).Statements
-
-// 	return &FunctionExpr{
-// 		Name:   name,
-// 		Params: parameters,
-// 		Body:   body,
-// 	}, nil
-// }
-
 func (p *Parser) synchronize() {
 	p.advance()
 
