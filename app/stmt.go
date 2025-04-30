@@ -10,6 +10,7 @@ type StmtVisitor interface {
 	VisitFunctionStmt(stmt *Function) interface{}
 	VisitReturnStmt(stmt *ReturnStmt) interface{}
 	VisitResolverStmt(stmt *Resolver) interface{}
+	VisitClassStmt(stmt *Class) interface{}
 }
 
 type Stmt interface {
@@ -42,6 +43,11 @@ type If struct {
 type While struct {
 	Condition Expr
 	Body      Stmt
+}
+
+type Class struct {
+	Name    Token
+	Methods []Stmt
 }
 
 func (stmt *Print) Accept(visitor StmtVisitor) interface{} {
@@ -78,4 +84,8 @@ func (r *ReturnStmt) Accept(visitor StmtVisitor) interface{} {
 
 func (r *Resolver) Accept(visitor StmtVisitor) interface{} {
 	return visitor.VisitResolverStmt(r)
+}
+
+func (c *Class) Accept(visitor StmtVisitor) interface{} {
+	return visitor.VisitClassStmt(c)
 }

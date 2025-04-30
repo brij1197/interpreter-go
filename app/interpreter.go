@@ -463,3 +463,9 @@ func (i *Interpreter) VisitFunctionExpr(expr *FunctionExpr) interface{} {
 	}
 	return NewLoxFunction(function, i.environment)
 }
+
+func (i *Interpreter) VisitClassStmt(stmt *Class) interface{} {
+	class := NewLoxClass(stmt.Name.Lexeme)
+	i.environment.Define(stmt.Name.Lexeme, class)
+	return nil
+}

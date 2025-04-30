@@ -17,6 +17,9 @@ func NewParser(tokens []Token) *Parser {
 }
 
 func (p *Parser) declaration() (Stmt, error) {
+	if p.match(CLASS) {
+		return p.classDeclaration()
+	}
 	if p.match(FUN) {
 		return p.function("function")
 	}
@@ -668,4 +671,32 @@ func (p *Parser) synchronize() {
 		}
 		p.advance()
 	}
+}
+
+func (p *Parser) classDeclaration() (Stmt, error) {
+	name, err := p.consume(IDENTIFIER, "Expect class name.")
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = p.consume(LEFT_BRACE, "Expect '{' before class body.")
+	if err != nil {
+		return nil, err
+	}
+
+	methods := make([]Stmt, 0)
+	for !p.check(RIGHT_BRACE) && !p.isAtEnd() {
+		method, err := p.function("method")
+		if err != nil {
+			return nil, err
+		}
+		methods = append(methods, method)
+	}
+
+	_, err = p.consume(RIGHT_BRACE, "Expect '}' after class body.")
+	if err != nil {
+		return nil, err
+	}
+
+	return &Class{Name: *name, Methods: methods}, nil
 }

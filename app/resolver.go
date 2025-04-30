@@ -271,3 +271,9 @@ func (r *Resolver) VisitFunctionExpr(expr *FunctionExpr) interface{} {
 	r.currentFunction = enclosingFunction
 	return nil
 }
+
+func (r *Resolver) VisitClassStmt(stmt *Class) interface{} {
+	r.declare(&stmt.Name)
+	r.define(&stmt.Name)
+	return nil
+}
