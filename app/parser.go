@@ -388,7 +388,13 @@ func (p *Parser) assignment() (Expr, error) {
 			return nil, err
 		}
 
-		if v, ok := expr.(*Variable); ok {
+		if get, ok := expr.(*Get); ok {
+			return &Set{
+				Object: get.Object,
+				Name:   get.Name,
+				Value:  value,
+			}, nil
+		} else if v, ok := expr.(*Variable); ok {
 			return &Assign{
 				Name:  v.Name,
 				Value: value,
@@ -530,6 +536,15 @@ func (p *Parser) call() (Expr, error) {
 			expr, err = p.finishCall(expr)
 			if err != nil {
 				return nil, err
+			}
+		} else if p.match(DOT) {
+			name, err := p.consume(IDENTIFIER, "Expect property name after '.'.")
+			if err != nil {
+				return nil, err
+			}
+			expr = &Get{
+				Object: expr,
+				Name:   *name,
 			}
 		} else {
 			break

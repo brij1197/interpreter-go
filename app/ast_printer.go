@@ -96,3 +96,14 @@ func (a *AstPrinter) VisitFunctionExpr(expr *FunctionExpr) interface{} {
 
 	return builder.String()
 }
+
+func (a *AstPrinter) VisitGetExpr(expr *Get) interface{} {
+	objectStr := expr.Object.Accept(a).(string)
+	return fmt.Sprintf("%s.%s", objectStr, expr.Name.Lexeme)
+}
+
+func (a *AstPrinter) VisitSetExpr(expr *Set) interface{} {
+	objectStr := expr.Object.Accept(a).(string)
+	valueStr := expr.Value.Accept(a).(string)
+	return fmt.Sprintf("(%s.%s = %s)", objectStr, expr.Name.Lexeme, valueStr)
+}

@@ -50,6 +50,17 @@ type FunctionExpr struct {
 	Body   []Stmt
 }
 
+type Get struct {
+	Object Expr
+	Name   Token
+}
+
+type Set struct {
+	Object Expr
+	Name   Token
+	Value  Expr
+}
+
 type ExprVisitor interface {
 	VisitBinaryExpr(expr *Binary) interface{}
 	VisitLiteralExpr(expr *Literal) interface{}
@@ -60,6 +71,8 @@ type ExprVisitor interface {
 	VisitLogicalExpr(expr *Logical) interface{}
 	VisitCallExpr(expr *Call) interface{}
 	VisitFunctionExpr(expr *FunctionExpr) interface{}
+	VisitGetExpr(expr *Get) interface{}
+	VisitSetExpr(expr *Set) interface{}
 }
 
 func (b *Binary) Accept(visitor ExprVisitor) interface{} {
@@ -96,4 +109,12 @@ func (c *Call) Accept(visitor ExprVisitor) interface{} {
 
 func (e *FunctionExpr) Accept(visitor ExprVisitor) interface{} {
 	return visitor.VisitFunctionExpr(e)
+}
+
+func (g *Get) Accept(visitor ExprVisitor) interface{} {
+	return visitor.VisitGetExpr(g)
+}
+
+func (s *Set) Accept(visitor ExprVisitor) interface{} {
+	return visitor.VisitSetExpr(s)
 }

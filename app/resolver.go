@@ -277,3 +277,14 @@ func (r *Resolver) VisitClassStmt(stmt *Class) interface{} {
 	r.define(&stmt.Name)
 	return nil
 }
+
+func (r *Resolver) VisitGetExpr(expr *Get) interface{} {
+	r.resolveExpr(expr.Object)
+	return nil
+}
+
+func (r *Resolver) VisitSetExpr(expr *Set) interface{} {
+	r.resolveExpr(expr.Value)
+	r.resolveExpr(expr.Object)
+	return nil
+}

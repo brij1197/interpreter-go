@@ -473,3 +473,30 @@ func (i *Interpreter) VisitClassStmt(stmt *Class) interface{} {
 	i.environment.Define(stmt.Name.Lexeme, class)
 	return nil
 }
+
+func (i *Interpreter) VisitGetExpr(expr *Get) interface{} {
+	object := i.Evaluate(expr.Object)
+
+	if instance, ok := object.(*LoxInstance); ok {
+		return instance.Get(expr.Name)
+	}
+	panic(&RuntimeError{
+		token:   expr.Name,
+		message: "Only instances have properties.",
+	})
+}
+
+func (i *Interpreter) VisitSetExpr(expr *Set) interface{} {
+	object := i.Evaluate(expr.Object)
+
+	if instance, ok := object.(*LoxInstance); ok {
+		value := i.Evaluate(expr.Value)
+		instance.Set(expr.Name, value)
+		return value
+	}
+
+	panic(&RuntimeError{
+		token:   expr.Name,
+		message: "Only instances have fields.",
+	})
+}
