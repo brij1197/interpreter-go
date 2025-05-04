@@ -284,6 +284,10 @@ func (i *Interpreter) stringify(obj interface{}) string {
 		return fmt.Sprintf("%g", num)
 	}
 
+	if stringer, ok := obj.(fmt.Stringer); ok {
+		return stringer.String()
+	}
+
 	return fmt.Sprintf("%v", obj)
 }
 
