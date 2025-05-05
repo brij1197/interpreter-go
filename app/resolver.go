@@ -9,6 +9,7 @@ type Resolver struct {
 	interpreter     *Interpreter
 	scopes          []map[string]bool
 	currentFunction FunctionType
+	currentClass    FunctionType
 	globals         map[string]bool
 	inInitializer   map[string]bool
 }
@@ -18,6 +19,7 @@ type FunctionType int
 const (
 	NONE FunctionType = iota
 	FUNCTION
+	CLASS_TYPE
 )
 
 func NewResolver(interpreter *Interpreter) *Resolver {
@@ -25,6 +27,7 @@ func NewResolver(interpreter *Interpreter) *Resolver {
 		interpreter:     interpreter,
 		scopes:          make([]map[string]bool, 0),
 		currentFunction: NONE,
+		currentClass:    NONE,
 		globals:         make(map[string]bool),
 		inInitializer:   make(map[string]bool),
 	}
@@ -275,6 +278,27 @@ func (r *Resolver) VisitFunctionExpr(expr *FunctionExpr) interface{} {
 func (r *Resolver) VisitClassStmt(stmt *Class) interface{} {
 	r.declare(&stmt.Name)
 	r.define(&stmt.Name)
+
+	enclosingClass := r.currentClass
+	r.currentClass = CLASS_TYPE
+
+	if len(r.scopes) > 0 {
+		r.beginScope()
+		r.scopes[len(r.scopes)-1]["this"] = true
+	}
+
+	for _, method := range stmt.Methods {
+		if function, ok := method.(*Function); ok {
+			r.resolveFunction(function)
+		}
+	}
+
+	if len(r.scopes) > 0 {
+		r.endScope()
+	}
+
+	r.currentClass = enclosingClass
+
 	return nil
 }
 

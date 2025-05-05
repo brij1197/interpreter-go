@@ -469,6 +469,7 @@ func (i *Interpreter) VisitFunctionExpr(expr *FunctionExpr) interface{} {
 }
 
 func (i *Interpreter) VisitClassStmt(stmt *Class) interface{} {
+	i.environment.Define(stmt.Name.Lexeme, nil)
 	methods := make(map[string]*LoxFunction)
 
 	for _, method := range stmt.Methods {
@@ -481,7 +482,9 @@ func (i *Interpreter) VisitClassStmt(stmt *Class) interface{} {
 	}
 
 	class := NewLoxClass(stmt.Name.Lexeme, methods)
+
 	i.environment.Define(stmt.Name.Lexeme, class)
+
 	return nil
 }
 
