@@ -469,7 +469,18 @@ func (i *Interpreter) VisitFunctionExpr(expr *FunctionExpr) interface{} {
 }
 
 func (i *Interpreter) VisitClassStmt(stmt *Class) interface{} {
-	class := NewLoxClass(stmt.Name.Lexeme)
+	methods := make(map[string]*LoxFunction)
+
+	for _, method := range stmt.Methods {
+		function, ok := method.(*Function)
+		if !ok {
+			continue
+		}
+		loxFunction := NewLoxFunction(function, i.environment)
+		methods[function.Name.Lexeme] = loxFunction
+	}
+
+	class := NewLoxClass(stmt.Name.Lexeme, methods)
 	i.environment.Define(stmt.Name.Lexeme, class)
 	return nil
 }

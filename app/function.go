@@ -50,3 +50,12 @@ func (f *LoxFunction) String() string {
 func (f *LoxFunction) Arity() int {
 	return len(f.declaration.Params)
 }
+
+func (f *LoxFunction) Bind(instance *LoxInstance) *LoxFunction {
+	environment := NewEnvironment(f.closure)
+	environment.Define("this", instance)
+	return &LoxFunction{
+		declaration: f.declaration,
+		closure:     environment,
+	}
+}
