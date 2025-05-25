@@ -514,3 +514,7 @@ func (i *Interpreter) VisitSetExpr(expr *Set) interface{} {
 		message: "Only instances have fields.",
 	})
 }
+
+func (i *Interpreter) VisitThisExpr(expr *This) interface{} {
+	return i.lookupVariable(expr.Keyword, expr)
+}

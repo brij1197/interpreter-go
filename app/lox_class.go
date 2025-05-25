@@ -28,7 +28,3 @@ func (c *LoxClass) Call(interpreter *Interpreter, arguments []interface{}) inter
 func (c *LoxClass) Arity() int {
 	return 0
 }
-
-func (i *Interpreter) VisitThisExpr(expr *This) interface{} {
-	return i.lookupVariable(expr.Keyword, expr)
-}
