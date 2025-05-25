@@ -190,7 +190,7 @@ func (r *Resolver) resolveFunction(function *Function) {
 func (r *Resolver) VisitBlockStmt(stmt *Block) interface{} {
 	r.beginScope()
 
-	// PRE-declare and PRE-define all function names BEFORE resolving anything
+	// Pre-declare and define functions to capture outer scope correctly
 	for _, s := range stmt.Statements {
 		if fn, ok := s.(*Function); ok {
 			r.declare(&fn.Name)
@@ -199,7 +199,6 @@ func (r *Resolver) VisitBlockStmt(stmt *Block) interface{} {
 		}
 	}
 
-	// Now resolve function bodies and other statements
 	for _, s := range stmt.Statements {
 		r.resolveStmt(s)
 	}

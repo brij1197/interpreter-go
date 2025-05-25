@@ -419,11 +419,14 @@ func (i *Interpreter) VisitCallExpr(expr *Call) interface{} {
 }
 
 func (i *Interpreter) VisitFunctionStmt(stmt *Function) interface{} {
-	closure := i.environment
-	fmt.Fprintf(os.Stderr, "DEBUG: Binding function %s with closure %p\n", stmt.Name.Lexeme, closure)
+	function := NewLoxFunction(stmt, i.environment)
+	fmt.Fprintf(os.Stderr, "DEBUG: Binding function %s with closure %p\n", stmt.Name.Lexeme, function.closure)
 
-	function := NewLoxFunction(stmt, closure)
-	i.environment.Define(stmt.Name.Lexeme, function)
+	err := i.environment.Assign(stmt.Name, function)
+	if err != nil {
+		panic(err)
+	}
+
 	return nil
 }
 
