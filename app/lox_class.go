@@ -22,9 +22,15 @@ func (c *LoxClass) FindMethod(name string) *LoxFunction {
 
 func (c *LoxClass) Call(interpreter *Interpreter, arguments []interface{}) interface{} {
 	instance := NewLoxInstance(c)
+	if initializer := c.FindMethod("init"); initializer != nil {
+		initializer.Bind(instance).Call(interpreter, arguments)
+	}
 	return instance
 }
 
 func (c *LoxClass) Arity() int {
+	if initializer := c.FindMethod("init"); initializer != nil {
+		return initializer.Arity()
+	}
 	return 0
 }
