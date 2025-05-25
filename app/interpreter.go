@@ -338,23 +338,11 @@ func (i *Interpreter) VisitBlockStmt(stmt *Block) interface{} {
 func (i *Interpreter) executeBlock(statements []Stmt, environment *Environment) interface{} {
 	previous := i.environment
 	i.environment = environment
-
-	defer func() {
-		i.environment = previous
-		if r := recover(); r != nil {
-			if ret, ok := r.(ReturnValue); ok {
-				panic(ret)
-			}
-			panic(r)
-		}
-	}()
-
+	defer func() { i.environment = previous }()
 	var result interface{}
 	for _, statement := range statements {
 		result = i.Execute(statement)
-		if _, ok := result.(ReturnValue); ok {
-			return result
-		}
+		// Do not try to catch ReturnValue here!
 	}
 	return result
 }
@@ -419,14 +407,12 @@ func (i *Interpreter) VisitCallExpr(expr *Call) interface{} {
 }
 
 func (i *Interpreter) VisitFunctionStmt(stmt *Function) interface{} {
-	function := NewLoxFunction(stmt, i.environment)
-	fmt.Fprintf(os.Stderr, "DEBUG: Binding function %s with closure %p\n", stmt.Name.Lexeme, function.closure)
-
-	err := i.environment.Assign(stmt.Name, function)
-	if err != nil {
-		panic(err)
+	function := &LoxFunction{
+		declaration:   stmt,
+		closure:       i.environment, // ← this must be the current env at declaration
+		isInitializer: false,
 	}
-
+	i.environment.Define(stmt.Name.Lexeme, function)
 	return nil
 }
 
@@ -444,24 +430,22 @@ func (i *Interpreter) resolve(expr Expr, depth int) {
 }
 
 func (i *Interpreter) lookupVariable(name Token, expr Expr) interface{} {
+	// if we resolved it into a local slot…
 	if distance, ok := i.locals[expr]; ok {
-		if distance == -1 {
-			fmt.Fprintf(os.Stderr, "DEBUG: locals[%p] = %d\n", expr, distance)
-			value, err := i.globals.Get(name.Lexeme)
-			if err != nil {
-				panic(&RuntimeError{token: name, message: err.Error()})
-			}
-			return value
+		// normal locals (parameters, local vars) live exactly 'distance' hops up.
+		if name.Type == THIS {
+			return i.environment.GetAt(distance+1, name.Lexeme)
 		}
-		fmt.Fprintf(os.Stderr, "DEBUG: locals[%p] = %d\n", expr, distance)
+		// "this" was injected into the *parent* of the call-wrapper frame,
+		// so skip one extra level to land in the closure that actually holds it.
 		return i.environment.GetAt(distance, name.Lexeme)
 	}
-
-	value, err := i.environment.Get(name.Lexeme)
+	// otherwise it’s a true global
+	val, err := i.globals.Get(name.Lexeme)
 	if err != nil {
 		panic(&RuntimeError{token: name, message: err.Error()})
 	}
-	return value
+	return val
 }
 
 func (i *Interpreter) VisitResolverStmt(stmt *Resolver) interface{} {
@@ -474,7 +458,7 @@ func (i *Interpreter) VisitFunctionExpr(expr *FunctionExpr) interface{} {
 		Params: expr.Params,
 		Body:   expr.Body,
 	}
-	return NewLoxFunction(function, i.environment)
+	return NewLoxFunction(function, i.environment, false)
 }
 
 func (i *Interpreter) VisitClassStmt(stmt *Class) interface{} {
@@ -486,7 +470,8 @@ func (i *Interpreter) VisitClassStmt(stmt *Class) interface{} {
 		if !ok {
 			continue
 		}
-		loxFunction := NewLoxFunction(function, i.environment)
+		isInitializer := function.Name.Lexeme == "init"
+		loxFunction := NewLoxFunction(function, i.environment, isInitializer)
 		methods[function.Name.Lexeme] = loxFunction
 	}
 

@@ -60,10 +60,7 @@ func (e *Environment) Assign(name Token, value interface{}) error {
 }
 
 func (e *Environment) GetAt(distance int, name string) interface{} {
-	env := e.ancestor(distance)
-	val := env.values[name]
-	fmt.Fprintf(os.Stderr, "DEBUG: GetAt depth=%d name=%s => %v\n", distance, name, val)
-	return val
+	return e.ancestor(distance).values[name]
 }
 
 func (e *Environment) ancestor(distance int) *Environment {

@@ -2,12 +2,12 @@ package main
 
 import (
 	"fmt"
-	"os"
 )
 
 type LoxFunction struct {
-	declaration *Function
-	closure     *Environment
+	declaration   *Function
+	closure       *Environment
+	isInitializer bool
 }
 
 type Function struct {
@@ -16,35 +16,44 @@ type Function struct {
 	Body   []Stmt
 }
 
-func NewLoxFunction(declaration *Function, closure *Environment) *LoxFunction {
+func NewLoxFunction(declaration *Function, closure *Environment, isInitializer bool) *LoxFunction {
 	return &LoxFunction{
-		declaration: declaration,
-		closure:     closure,
+		declaration:   declaration,
+		closure:       closure,
+		isInitializer: isInitializer,
 	}
 }
 
-func (f *LoxFunction) Call(interpreter *Interpreter, arguments []interface{}) interface{} {
-	env := f.closure
-
+func (f *LoxFunction) Call(interpreter *Interpreter, arguments []interface{}) (ret interface{}) {
+	newEnv := NewEnvironment(f.closure)
 	for i, param := range f.declaration.Params {
-		env.Define(param.Lexeme, arguments[i])
+		newEnv.Define(param.Lexeme, arguments[i])
 	}
 
-	var result interface{}
-	func() {
-		defer func() {
-			if r := recover(); r != nil {
-				if ret, ok := r.(*ReturnValue); ok {
-					result = ret.Value
-				} else {
-					panic(r)
-				}
+	prev := interpreter.environment
+	interpreter.environment = newEnv
+	defer func() { interpreter.environment = prev }()
+
+	defer func() {
+		if r := recover(); r != nil {
+			if retVal, ok := r.(*ReturnValue); ok {
+				ret = retVal.Value
+			} else {
+				panic(r)
 			}
-		}()
-		interpreter.executeBlock(f.declaration.Body, env)
+		}
 	}()
 
-	return result
+	// Don't use executeBlock here!
+	for _, stmt := range f.declaration.Body {
+		ret = interpreter.Execute(stmt)
+	}
+
+	if f.isInitializer {
+		thisVal, _ := newEnv.Get("this")
+		return thisVal
+	}
+	return
 }
 
 func (f *LoxFunction) String() string {
@@ -56,14 +65,7 @@ func (f *LoxFunction) Arity() int {
 }
 
 func (f *LoxFunction) Bind(instance *LoxInstance) *LoxFunction {
-	environment := NewEnvironment(f.closure)
-	environment.Define("this", instance)
-
-	fmt.Fprintf(os.Stderr, "DEBUG: Binding this to %v\n", instance)
-	fmt.Fprintf(os.Stderr, "DEBUG: f.closure = %p, newEnv = %p\n", f.closure, environment)
-
-	return &LoxFunction{
-		declaration: f.declaration,
-		closure:     environment,
-	}
+	env := NewEnvironment(f.closure)
+	env.Define("this", instance)
+	return NewLoxFunction(f.declaration, env, f.isInitializer)
 }

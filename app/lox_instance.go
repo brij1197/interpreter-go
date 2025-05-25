@@ -23,16 +23,17 @@ func (i *LoxInstance) String() string {
 	return fmt.Sprintf("%s instance", i.class.name)
 }
 
-func (i *LoxInstance) Get(name Token) interface{} {
-	if value, ok := i.fields[name.Lexeme]; ok {
+func (instance *LoxInstance) Get(name Token) interface{} {
+	// Check fields first
+	if value, ok := instance.fields[name.Lexeme]; ok {
+		fmt.Fprintf(os.Stderr, "DEBUG: Get field %s = %v\n", name.Lexeme, value)
 		return value
 	}
 
-	method := i.class.FindMethod(name.Lexeme)
-	if method != nil {
-		bound := method.Bind(i)
-		fmt.Fprintf(os.Stderr, "DEBUG: Returning bound method with closure = %p\n", bound.closure)
-		return bound
+	// Then check methods
+	if method := instance.class.FindMethod(name.Lexeme); method != nil {
+		// If it's a method, bind 'this' to the instance
+		return method.Bind(instance)
 	}
 
 	panic(&RuntimeError{

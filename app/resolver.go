@@ -80,22 +80,19 @@ func (r *Resolver) define(name *Token) {
 }
 
 func (r *Resolver) resolveLocal(expr Expr, name *Token) {
+	// only resolve names actually declared in one of the lexically enclosing scopes
 	for i := len(r.scopes) - 1; i >= 0; i-- {
 		if _, ok := r.scopes[i][name.Lexeme]; ok {
 			if r.inInitializer[name.Lexeme] {
-				panic(&ParseError{
-					token:   *name,
-					message: "Can't read local variable in its own initializer.",
-				})
+				panic(&ParseError{token: *name, message: "Can't read local variable in its own initializer."})
 			}
 			depth := len(r.scopes) - 1 - i
 			fmt.Fprintf(os.Stderr, "DEBUG: resolveLocal %s at depth %d\n", name.Lexeme, depth)
 			r.interpreter.resolve(expr, depth)
 			return
 		}
-
 	}
-	// fallback: global scope
+	// if we never saw it in a local scope, do nothing—let the interpreter look in globals
 }
 
 func (r *Resolver) VisitBinaryExpr(expr *Binary) interface{} {
@@ -163,6 +160,8 @@ func (r *Resolver) VisitExpressionStmt(stmt *Expression) interface{} {
 }
 
 func (r *Resolver) VisitFunctionStmt(stmt *Function) interface{} {
+	r.declare(&stmt.Name) // makes the name visible in the scope (value=nil)
+	r.define(&stmt.Name)  // assigns it as defined
 	r.resolveFunction(stmt)
 	return nil
 }
@@ -189,29 +188,19 @@ func (r *Resolver) resolveFunction(function *Function) {
 
 func (r *Resolver) VisitBlockStmt(stmt *Block) interface{} {
 	r.beginScope()
-
-	// Pre-declare and define functions to capture outer scope correctly
-	for _, s := range stmt.Statements {
-		if fn, ok := s.(*Function); ok {
-			r.declare(&fn.Name)
-			r.define(&fn.Name)
-			fmt.Fprintf(os.Stderr, "DEBUG: Pre-defining function %s\n", fn.Name.Lexeme)
-		}
-	}
-
-	for _, s := range stmt.Statements {
-		r.resolveStmt(s)
-	}
-
+	r.Resolve(stmt.Statements)
 	r.endScope()
 	return nil
 }
 
 func (r *Resolver) VisitVarStmt(stmt *Var) interface{} {
 	r.declare(&stmt.Name)
+
+	// This ensures variable is declared but not yet defined when resolving the initializer.
 	if stmt.Initializer != nil {
 		r.resolveExpr(stmt.Initializer)
 	}
+
 	r.define(&stmt.Name)
 	return nil
 }
