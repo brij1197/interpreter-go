@@ -337,6 +337,9 @@ func (p *Parser) primary() (Expr, error) {
 		}
 		return &Grouping{Expression: expr}, nil
 	}
+	if p.match(THIS) {
+		return &This{Keyword: p.previous()}, nil
+	}
 
 	return nil, fmt.Errorf("Expect expression.")
 }
