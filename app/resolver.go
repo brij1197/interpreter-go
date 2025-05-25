@@ -163,6 +163,10 @@ func (r *Resolver) resolveFunction(function *Function) {
 
 	r.beginScope()
 
+	if r.currentClass != NONE {
+		r.scopes[len(r.scopes)-1]["this"] = true
+	}
+
 	for _, param := range function.Params {
 		r.declare(&param)
 		r.define(&param)
