@@ -30,10 +30,6 @@ func (f *LoxFunction) Call(interpreter *Interpreter, arguments []interface{}) in
 		environment.Define(f.declaration.Params[i].Lexeme, arguments[i])
 	}
 
-	if val, ok := environment.values["this"]; ok {
-		fmt.Fprintf(os.Stderr, "DEBUG: this = %v\n", val)
-	}
-
 	previousEnv := interpreter.environment
 	interpreter.environment = environment
 
@@ -61,6 +57,9 @@ func (f *LoxFunction) Arity() int {
 func (f *LoxFunction) Bind(instance *LoxInstance) *LoxFunction {
 	environment := NewEnvironment(f.closure)
 	environment.Define("this", instance)
+
+	fmt.Fprintf(os.Stderr, "DEBUG: Binding this to %v\n", instance)
+
 	return &LoxFunction{
 		declaration: f.declaration,
 		closure:     environment,
