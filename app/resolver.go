@@ -164,7 +164,8 @@ func (r *Resolver) resolveFunction(function *Function) {
 	r.beginScope()
 
 	if r.currentClass != NONE {
-		r.scopes[len(r.scopes)-1]["this"] = true
+		scope := r.scopes[len(r.scopes)-1]
+		scope["this"] = true
 	}
 
 	for _, param := range function.Params {
@@ -297,9 +298,9 @@ func (r *Resolver) VisitClassStmt(stmt *Class) interface{} {
 		}
 	}
 
-	if len(r.scopes) > 0 {
-		r.endScope()
-	}
+	// if len(r.scopes) > 0 {
+	r.endScope()
+	// }
 
 	r.currentClass = enclosingClass
 
