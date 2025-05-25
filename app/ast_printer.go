@@ -107,3 +107,7 @@ func (a *AstPrinter) VisitSetExpr(expr *Set) interface{} {
 	valueStr := expr.Value.Accept(a).(string)
 	return fmt.Sprintf("(%s.%s = %s)", objectStr, expr.Name.Lexeme, valueStr)
 }
+
+func (a *AstPrinter) VisitThisExpr(expr *This) interface{} {
+	return "this"
+}
