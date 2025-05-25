@@ -322,7 +322,6 @@ func (r *Resolver) VisitThisExpr(expr *This) interface{} {
 	if r.currentClass == NONE {
 		panic(NewParseError(expr.Keyword, "Can't use 'this' outside of a class method."))
 	}
-	thisToken := Token{Lexeme: "this"}
-	r.resolveLocal(expr, &thisToken)
+	r.resolveLocal(expr, &expr.Keyword)
 	return nil
 }

@@ -7,6 +7,8 @@ type LoxInstance struct {
 	fields map[string]interface{}
 }
 
+var _ fmt.Stringer = (*LoxInstance)(nil)
+
 func NewLoxInstance(class *LoxClass) *LoxInstance {
 	return &LoxInstance{
 		class:  class,
