@@ -287,10 +287,10 @@ func (r *Resolver) VisitClassStmt(stmt *Class) interface{} {
 	enclosingClass := r.currentClass
 	r.currentClass = CLASS_TYPE
 
-	if len(r.scopes) > 0 {
-		r.beginScope()
-		r.scopes[len(r.scopes)-1]["this"] = true
-	}
+	// if len(r.scopes) > 0 {
+	r.beginScope()
+	r.scopes[len(r.scopes)-1]["this"] = true
+	// }
 
 	for _, method := range stmt.Methods {
 		if function, ok := method.(*Function); ok {
@@ -322,6 +322,7 @@ func (r *Resolver) VisitThisExpr(expr *This) interface{} {
 	if r.currentClass == NONE {
 		panic(NewParseError(expr.Keyword, "Can't use 'this' outside of a class method."))
 	}
-	r.resolveLocal(expr, &expr.Keyword)
+	thisToken := Token{Lexeme: "this"}
+	r.resolveLocal(expr, &thisToken)
 	return nil
 }
