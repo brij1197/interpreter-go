@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"reflect"
 )
 
@@ -9,12 +10,20 @@ type Resolver struct {
 	interpreter     *Interpreter
 	scopes          []map[string]bool
 	currentFunction FunctionType
-	currentClass    FunctionType
 	globals         map[string]bool
 	inInitializer   map[string]bool
+	currentClass    ClassType
 }
 
 type FunctionType int
+
+type ClassType int
+
+const (
+	NO_CLASS ClassType = iota
+	IN_CLASS
+	IN_SUBCLASS
+)
 
 const (
 	NONE FunctionType = iota
@@ -27,7 +36,7 @@ func NewResolver(interpreter *Interpreter) *Resolver {
 		interpreter:     interpreter,
 		scopes:          make([]map[string]bool, 0),
 		currentFunction: NONE,
-		currentClass:    NONE,
+		currentClass:    NO_CLASS,
 		globals:         make(map[string]bool),
 		inInitializer:   make(map[string]bool),
 	}
@@ -73,16 +82,20 @@ func (r *Resolver) define(name *Token) {
 func (r *Resolver) resolveLocal(expr Expr, name *Token) {
 	for i := len(r.scopes) - 1; i >= 0; i-- {
 		if _, ok := r.scopes[i][name.Lexeme]; ok {
-			if len(r.scopes) > 0 && r.inInitializer[name.Lexeme] {
+			if r.inInitializer[name.Lexeme] {
 				panic(&ParseError{
 					token:   *name,
 					message: "Can't read local variable in its own initializer.",
 				})
 			}
-			r.interpreter.resolve(expr, len(r.scopes)-1-i)
+			depth := len(r.scopes) - 1 - i
+			fmt.Fprintf(os.Stderr, "DEBUG: resolveLocal %s at depth %d\n", name.Lexeme, depth)
+			r.interpreter.resolve(expr, depth)
 			return
 		}
+
 	}
+	// fallback: global scope
 }
 
 func (r *Resolver) VisitBinaryExpr(expr *Binary) interface{} {
@@ -150,9 +163,6 @@ func (r *Resolver) VisitExpressionStmt(stmt *Expression) interface{} {
 }
 
 func (r *Resolver) VisitFunctionStmt(stmt *Function) interface{} {
-	r.declare(&stmt.Name)
-	r.define(&stmt.Name)
-
 	r.resolveFunction(stmt)
 	return nil
 }
@@ -163,9 +173,8 @@ func (r *Resolver) resolveFunction(function *Function) {
 
 	r.beginScope()
 
-	if r.currentClass != NONE {
-		scope := r.scopes[len(r.scopes)-1]
-		scope["this"] = true
+	if r.currentClass != NO_CLASS {
+		r.scopes[len(r.scopes)-1]["this"] = true
 	}
 
 	for _, param := range function.Params {
@@ -174,14 +183,27 @@ func (r *Resolver) resolveFunction(function *Function) {
 	}
 
 	r.resolveStatements(function.Body)
-
 	r.endScope()
 	r.currentFunction = enclosingFunction
 }
 
 func (r *Resolver) VisitBlockStmt(stmt *Block) interface{} {
 	r.beginScope()
-	r.Resolve(stmt.Statements)
+
+	// PRE-declare and PRE-define all function names BEFORE resolving anything
+	for _, s := range stmt.Statements {
+		if fn, ok := s.(*Function); ok {
+			r.declare(&fn.Name)
+			r.define(&fn.Name)
+			fmt.Fprintf(os.Stderr, "DEBUG: Pre-defining function %s\n", fn.Name.Lexeme)
+		}
+	}
+
+	// Now resolve function bodies and other statements
+	for _, s := range stmt.Statements {
+		r.resolveStmt(s)
+	}
+
 	r.endScope()
 	return nil
 }
@@ -281,16 +303,15 @@ func (r *Resolver) VisitFunctionExpr(expr *FunctionExpr) interface{} {
 }
 
 func (r *Resolver) VisitClassStmt(stmt *Class) interface{} {
+	enclosingClass := r.currentClass
+	r.currentClass = IN_CLASS
+
+	// Declare and define the class name in the current scope
 	r.declare(&stmt.Name)
 	r.define(&stmt.Name)
 
-	enclosingClass := r.currentClass
-	r.currentClass = CLASS_TYPE
-
-	// if len(r.scopes) > 0 {
-	r.beginScope()
-	r.scopes[len(r.scopes)-1]["this"] = true
-	// }
+	// Do not push another scope here!
+	// Each method gets its own scope (handled in resolveFunction)
 
 	for _, method := range stmt.Methods {
 		if function, ok := method.(*Function); ok {
@@ -298,12 +319,7 @@ func (r *Resolver) VisitClassStmt(stmt *Class) interface{} {
 		}
 	}
 
-	// if len(r.scopes) > 0 {
-	r.endScope()
-	// }
-
 	r.currentClass = enclosingClass
-
 	return nil
 }
 
@@ -319,10 +335,9 @@ func (r *Resolver) VisitSetExpr(expr *Set) interface{} {
 }
 
 func (r *Resolver) VisitThisExpr(expr *This) interface{} {
-	if r.currentClass == NONE {
+	if r.currentClass == NO_CLASS {
 		panic(NewParseError(expr.Keyword, "Can't use 'this' outside of a class method."))
 	}
-	thisToken := Token{Lexeme: "this", Type: THIS}
-	r.resolveLocal(expr, &thisToken)
+	r.resolveLocal(expr, &expr.Keyword)
 	return nil
 }

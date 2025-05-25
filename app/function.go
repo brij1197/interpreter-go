@@ -24,24 +24,25 @@ func NewLoxFunction(declaration *Function, closure *Environment) *LoxFunction {
 }
 
 func (f *LoxFunction) Call(interpreter *Interpreter, arguments []interface{}) interface{} {
-	environment := NewEnvironment(f.closure)
+	env := f.closure
 
-	for i := 0; i < len(f.declaration.Params); i++ {
-		environment.Define(f.declaration.Params[i].Lexeme, arguments[i])
+	for i, param := range f.declaration.Params {
+		env.Define(param.Lexeme, arguments[i])
 	}
 
-	previousEnv := interpreter.environment
-	interpreter.environment = environment
-
-	defer func() {
-		interpreter.environment = previousEnv
+	var result interface{}
+	func() {
+		defer func() {
+			if r := recover(); r != nil {
+				if ret, ok := r.(*ReturnValue); ok {
+					result = ret.Value
+				} else {
+					panic(r)
+				}
+			}
+		}()
+		interpreter.executeBlock(f.declaration.Body, env)
 	}()
-
-	result := interpreter.executeBlock(f.declaration.Body, environment)
-
-	if ret, ok := result.(ReturnValue); ok {
-		return ret.Value
-	}
 
 	return result
 }
@@ -59,6 +60,7 @@ func (f *LoxFunction) Bind(instance *LoxInstance) *LoxFunction {
 	environment.Define("this", instance)
 
 	fmt.Fprintf(os.Stderr, "DEBUG: Binding this to %v\n", instance)
+	fmt.Fprintf(os.Stderr, "DEBUG: f.closure = %p, newEnv = %p\n", f.closure, environment)
 
 	return &LoxFunction{
 		declaration: f.declaration,

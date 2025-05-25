@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"os"
+)
 
 type LoxInstance struct {
 	class  *LoxClass
@@ -27,8 +30,11 @@ func (i *LoxInstance) Get(name Token) interface{} {
 
 	method := i.class.FindMethod(name.Lexeme)
 	if method != nil {
-		return method.Bind(i)
+		bound := method.Bind(i)
+		fmt.Fprintf(os.Stderr, "DEBUG: Returning bound method with closure = %p\n", bound.closure)
+		return bound
 	}
+
 	panic(&RuntimeError{
 		token:   name,
 		message: fmt.Sprintf("Undefined property '%s'.", name.Lexeme),

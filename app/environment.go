@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"os"
+)
 
 type Environment struct {
 	values    map[string]interface{}
@@ -15,6 +18,11 @@ func NewEnvironment(enclosing *Environment) *Environment {
 }
 
 func (e *Environment) Define(name string, value interface{}) {
+	if e.values == nil {
+		fmt.Fprintf(os.Stderr, "DEBUG: ENV values was nil, initializing!\n")
+		e.values = make(map[string]interface{})
+	}
+	fmt.Fprintf(os.Stderr, "DEBUG: Define %s = %v in env %p\n", name, value, e)
 	e.values[name] = value
 }
 
@@ -52,12 +60,19 @@ func (e *Environment) Assign(name Token, value interface{}) error {
 }
 
 func (e *Environment) GetAt(distance int, name string) interface{} {
-	return e.ancestor(distance).values[name]
+	env := e.ancestor(distance)
+	val := env.values[name]
+	fmt.Fprintf(os.Stderr, "DEBUG: GetAt depth=%d name=%s => %v\n", distance, name, val)
+	return val
 }
 
 func (e *Environment) ancestor(distance int) *Environment {
 	environment := e
 	for i := 0; i < distance; i++ {
+		if environment.enclosing == nil {
+			fmt.Fprintf(os.Stderr, "DEBUG: Missing enclosing environment at depth %d\n", i)
+			break
+		}
 		environment = environment.enclosing
 	}
 	return environment

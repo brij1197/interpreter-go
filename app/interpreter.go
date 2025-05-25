@@ -419,17 +419,21 @@ func (i *Interpreter) VisitCallExpr(expr *Call) interface{} {
 }
 
 func (i *Interpreter) VisitFunctionStmt(stmt *Function) interface{} {
-	function := NewLoxFunction(stmt, i.environment)
+	closure := i.environment
+	fmt.Fprintf(os.Stderr, "DEBUG: Binding function %s with closure %p\n", stmt.Name.Lexeme, closure)
+
+	function := NewLoxFunction(stmt, closure)
 	i.environment.Define(stmt.Name.Lexeme, function)
 	return nil
 }
 
 func (i *Interpreter) VisitReturnStmt(stmt *ReturnStmt) interface{} {
-	var value interface{}
+	var value interface{} = nil
 	if stmt.Value != nil {
 		value = i.Evaluate(stmt.Value)
 	}
-	return ReturnValue{Value: value}
+
+	panic(&ReturnValue{Value: value})
 }
 
 func (i *Interpreter) resolve(expr Expr, depth int) {
@@ -439,12 +443,14 @@ func (i *Interpreter) resolve(expr Expr, depth int) {
 func (i *Interpreter) lookupVariable(name Token, expr Expr) interface{} {
 	if distance, ok := i.locals[expr]; ok {
 		if distance == -1 {
+			fmt.Fprintf(os.Stderr, "DEBUG: locals[%p] = %d\n", expr, distance)
 			value, err := i.globals.Get(name.Lexeme)
 			if err != nil {
 				panic(&RuntimeError{token: name, message: err.Error()})
 			}
 			return value
 		}
+		fmt.Fprintf(os.Stderr, "DEBUG: locals[%p] = %d\n", expr, distance)
 		return i.environment.GetAt(distance, name.Lexeme)
 	}
 
@@ -516,5 +522,7 @@ func (i *Interpreter) VisitSetExpr(expr *Set) interface{} {
 }
 
 func (i *Interpreter) VisitThisExpr(expr *This) interface{} {
-	return i.lookupVariable(expr.Keyword, expr)
+	val := i.lookupVariable(expr.Keyword, expr)
+	fmt.Fprintf(os.Stderr, "DEBUG: this resolved to %v\n", val)
+	return val
 }
