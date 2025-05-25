@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"os"
+)
 
 type LoxFunction struct {
 	declaration *Function
@@ -25,6 +28,10 @@ func (f *LoxFunction) Call(interpreter *Interpreter, arguments []interface{}) in
 
 	for i := 0; i < len(f.declaration.Params); i++ {
 		environment.Define(f.declaration.Params[i].Lexeme, arguments[i])
+	}
+
+	if val, ok := environment.values["this"]; ok {
+		fmt.Fprintf(os.Stderr, "DEBUG: this = %v\n", val)
 	}
 
 	previousEnv := interpreter.environment
