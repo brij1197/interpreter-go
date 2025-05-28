@@ -1,8 +1,9 @@
 package main
 
 type LoxClass struct {
-	name    string
-	methods map[string]*LoxFunction
+	name       string
+	superclass *LoxClass
+	methods    map[string]*LoxFunction
 }
 
 func NewLoxClass(name string, methods map[string]*LoxFunction) *LoxClass {

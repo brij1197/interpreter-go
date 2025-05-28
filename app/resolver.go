@@ -289,20 +289,23 @@ func (r *Resolver) VisitFunctionExpr(expr *FunctionExpr) interface{} {
 func (r *Resolver) VisitClassStmt(stmt *Class) interface{} {
 	enclosingClass := r.currentClass
 	r.currentClass = IN_CLASS
+
 	r.declare(&stmt.Name)
 	r.define(&stmt.Name)
 
+	if stmt.Superclass != nil {
+		r.resolveExpr(stmt.Superclass)
+	}
 	r.beginScope()
 	r.scopes[len(r.scopes)-1]["this"] = true
 
 	for _, method := range stmt.Methods {
-		if function, ok := method.(*Function); ok {
-			declaration := METHOD
-			if function.Name.Lexeme == "init" {
-				declaration = INITIALIZER
-			}
-			r.resolveFunction(function, declaration)
+		function, _ := method.(*Function)
+		declaration := METHOD
+		if function.Name.Lexeme == "init" {
+			declaration = INITIALIZER
 		}
+		r.resolveFunction(function, declaration)
 	}
 
 	r.endScope()

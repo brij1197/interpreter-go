@@ -427,24 +427,34 @@ func (i *Interpreter) VisitFunctionExpr(expr *FunctionExpr) interface{} {
 }
 
 func (i *Interpreter) VisitClassStmt(stmt *Class) interface{} {
+	var superclass *LoxClass
+	if stmt.Superclass != nil {
+		superclassValue := i.Evaluate(stmt.Superclass)
+		var ok bool
+		superclass, ok = superclassValue.(*LoxClass)
+		if !ok {
+			panic(&RuntimeError{token: stmt.Name, message: "Superclass must be a class."})
+		}
+	}
+
 	i.environment.Define(stmt.Name.Lexeme, nil)
 
 	methods := make(map[string]*LoxFunction)
 	for _, method := range stmt.Methods {
-		function := method.(*Function)
-		loxFunction := &LoxFunction{
-			declaration:   function,
+		fn := method.(*Function)
+		isInit := fn.Name.Lexeme == "init"
+		methods[fn.Name.Lexeme] = &LoxFunction{
+			declaration:   fn,
 			closure:       i.environment,
-			isInitializer: function.Name.Lexeme == "init",
+			isInitializer: isInit,
 		}
-		methods[function.Name.Lexeme] = loxFunction
 	}
 
 	class := &LoxClass{
-		name:    stmt.Name.Lexeme,
-		methods: methods,
+		name:       stmt.Name.Lexeme,
+		superclass: superclass,
+		methods:    methods,
 	}
-
 	i.environment.Assign(stmt.Name, class)
 	return nil
 }

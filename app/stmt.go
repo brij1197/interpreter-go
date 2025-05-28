@@ -46,8 +46,9 @@ type While struct {
 }
 
 type Class struct {
-	Name    Token
-	Methods []Stmt
+	Name       Token
+	Methods    []Stmt
+	Superclass Expr
 }
 
 func (stmt *Print) Accept(visitor StmtVisitor) interface{} {

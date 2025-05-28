@@ -705,6 +705,14 @@ func (p *Parser) classDeclaration() (Stmt, error) {
 	previousClass := p.currentClassName
 	p.currentClassName = name
 
+	var superclass Expr = nil
+	if p.match(LESS) {
+		p.consume(IDENTIFIER, "Expect superclass name.")
+		superclass = &Variable{
+			Name: p.previous(),
+		}
+	}
+
 	_, err = p.consume(LEFT_BRACE, "Expect '{' before class body.")
 	if err != nil {
 		return nil, err
@@ -726,5 +734,9 @@ func (p *Parser) classDeclaration() (Stmt, error) {
 
 	p.currentClassName = previousClass
 
-	return &Class{Name: *name, Methods: methods}, nil
+	return &Class{
+		Name:       *name,
+		Superclass: superclass,
+		Methods:    methods,
+	}, nil
 }
