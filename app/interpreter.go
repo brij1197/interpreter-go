@@ -376,15 +376,13 @@ func (i *Interpreter) VisitCallExpr(expr *Call) interface{} {
 			message: fmt.Sprintf("Expected %d arguments but got %d.", function.Arity(), len(arguments)),
 		})
 	}
-
-	// This line is crucial:
 	return function.Call(i, arguments)
 }
 
 func (i *Interpreter) VisitFunctionStmt(stmt *Function) interface{} {
 	function := &LoxFunction{
 		declaration:   stmt,
-		closure:       i.environment, // ← this must be the current env at declaration
+		closure:       i.environment,
 		isInitializer: false,
 	}
 	i.environment.Define(stmt.Name.Lexeme, function)
@@ -410,7 +408,7 @@ func (i *Interpreter) lookupVariable(name Token, expr Expr) interface{} {
 
 	val, err := i.globals.Get(name.Lexeme)
 	if err != nil {
-		panic(&RuntimeError{token: name, message: err.Error()}) // <-- must be *RuntimeError
+		panic(&RuntimeError{token: name, message: err.Error()})
 	}
 	return val
 }
@@ -466,7 +464,6 @@ func (i *Interpreter) VisitSetExpr(expr *Set) interface{} {
 
 	if instance, ok := object.(*LoxInstance); ok {
 		value := i.Evaluate(expr.Value)
-		// Don't try to rewrite value here!
 		instance.Set(expr.Name, value)
 		return value
 	}

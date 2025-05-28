@@ -80,14 +80,12 @@ func (r *Resolver) define(name *Token) {
 }
 
 func (r *Resolver) resolveLocal(expr Expr, name Token) {
-	// Start from innermost scope and work outward
 	for i := len(r.scopes) - 1; i >= 0; i-- {
 		if _, ok := r.scopes[i][name.Lexeme]; ok {
 			r.interpreter.resolve(expr, len(r.scopes)-1-i)
 			return
 		}
 	}
-	// Not found in any scope - it must be global
 }
 
 func (r *Resolver) VisitBinaryExpr(expr *Binary) interface{} {
@@ -216,7 +214,10 @@ func (r *Resolver) VisitPrintStmt(stmt *Print) interface{} {
 
 func (r *Resolver) VisitReturnStmt(stmt *ReturnStmt) interface{} {
 	if r.currentFunction == NONE {
-		panic(NewParseError(stmt.Keyword, "Can't return from top-level code."))
+		panic(fmt.Errorf("Can't return from top-level code."))
+	}
+	if r.currentFunction == INITIALIZER && stmt.Value != nil {
+		panic(fmt.Errorf("[line %d] Error at 'return': Can't return a value from an initializer.", stmt.Keyword.Line))
 	}
 	if stmt.Value != nil {
 		r.resolveExpr(stmt.Value)
@@ -288,16 +289,12 @@ func (r *Resolver) VisitFunctionExpr(expr *FunctionExpr) interface{} {
 func (r *Resolver) VisitClassStmt(stmt *Class) interface{} {
 	enclosingClass := r.currentClass
 	r.currentClass = IN_CLASS
-
-	// Declare and define the class name in the current scope
 	r.declare(&stmt.Name)
 	r.define(&stmt.Name)
 
-	// Create a new scope for the class body
 	r.beginScope()
 	r.scopes[len(r.scopes)-1]["this"] = true
 
-	// Resolve all methods
 	for _, method := range stmt.Methods {
 		if function, ok := method.(*Function); ok {
 			declaration := METHOD
