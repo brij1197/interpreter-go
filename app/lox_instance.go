@@ -22,19 +22,16 @@ func (i *LoxInstance) String() string {
 	return fmt.Sprintf("%s instance", i.class.name)
 }
 
-func (i *LoxInstance) Get(name Token) interface{} {
-	if value, ok := i.fields[name.Lexeme]; ok {
+func (instance *LoxInstance) Get(name Token) interface{} {
+	if value, ok := instance.fields[name.Lexeme]; ok {
 		return value
 	}
-
-	if method := i.class.methods[name.Lexeme]; method != nil {
-		return method.Bind(i)
+	method := instance.class.FindMethod(name.Lexeme)
+	if method != nil {
+		return method.Bind(instance)
 	}
+	panic(&RuntimeError{name, "Undefined property '" + name.Lexeme + "'."})
 
-	panic(&RuntimeError{
-		token:   name,
-		message: fmt.Sprintf("Undefined property '%s'.", name.Lexeme),
-	})
 }
 
 func (i *LoxInstance) Set(name Token, value interface{}) {

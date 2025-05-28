@@ -18,12 +18,16 @@ func (c *LoxClass) FindMethod(name string) *LoxFunction {
 	if method, ok := c.methods[name]; ok {
 		return method
 	}
+	if c.superclass != nil {
+		return c.superclass.FindMethod(name)
+	}
 	return nil
 }
 
 func (c *LoxClass) Call(interpreter *Interpreter, arguments []interface{}) interface{} {
 	instance := NewLoxInstance(c)
-	if initializer, ok := c.methods["init"]; ok {
+	initializer := c.FindMethod("init")
+	if initializer != nil {
 		initializer.Bind(instance).Call(interpreter, arguments)
 	}
 	return instance

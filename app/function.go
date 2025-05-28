@@ -53,11 +53,11 @@ func (f *LoxFunction) Arity() int {
 }
 
 func (f *LoxFunction) Bind(instance *LoxInstance) *LoxFunction {
-	environment := NewEnvironment(f.closure)
-	environment.Define("this", instance)
+	env := NewEnvironment(f.closure)
+	env.Define("this", instance)
 	return &LoxFunction{
 		declaration:   f.declaration,
-		closure:       environment,
+		closure:       env,
 		isInitializer: f.isInitializer,
 	}
 }

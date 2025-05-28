@@ -429,11 +429,11 @@ func (i *Interpreter) VisitFunctionExpr(expr *FunctionExpr) interface{} {
 func (i *Interpreter) VisitClassStmt(stmt *Class) interface{} {
 	var superclass *LoxClass
 	if stmt.Superclass != nil {
-		superclassValue := i.Evaluate(stmt.Superclass)
-		var ok bool
-		superclass, ok = superclassValue.(*LoxClass)
-		if !ok {
-			panic(&RuntimeError{token: stmt.Name, message: "Superclass must be a class."})
+		superclassVal := i.Evaluate(stmt.Superclass)
+		if sc, ok := superclassVal.(*LoxClass); ok {
+			superclass = sc
+		} else {
+			panic(RuntimeError{stmt.Name, "Superclass must be a class."})
 		}
 	}
 
@@ -441,12 +441,12 @@ func (i *Interpreter) VisitClassStmt(stmt *Class) interface{} {
 
 	methods := make(map[string]*LoxFunction)
 	for _, method := range stmt.Methods {
-		fn := method.(*Function)
-		isInit := fn.Name.Lexeme == "init"
-		methods[fn.Name.Lexeme] = &LoxFunction{
-			declaration:   fn,
+		function := method.(*Function)
+		isInitializer := function.Name.Lexeme == "init"
+		methods[function.Name.Lexeme] = &LoxFunction{
+			declaration:   function,
 			closure:       i.environment,
-			isInitializer: isInit,
+			isInitializer: isInitializer,
 		}
 	}
 
@@ -455,6 +455,7 @@ func (i *Interpreter) VisitClassStmt(stmt *Class) interface{} {
 		superclass: superclass,
 		methods:    methods,
 	}
+
 	i.environment.Assign(stmt.Name, class)
 	return nil
 }
@@ -465,7 +466,6 @@ func (i *Interpreter) VisitGetExpr(expr *Get) interface{} {
 	if instance, ok := object.(*LoxInstance); ok {
 		return instance.Get(expr.Name)
 	}
-
 	panic(RuntimeError{expr.Name, "Only instances have properties."})
 }
 
