@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"os"
 )
 
 type Environment struct {
@@ -19,7 +18,6 @@ func NewEnvironment(enclosing *Environment) *Environment {
 
 func (e *Environment) Define(name string, value interface{}) {
 	if e.values == nil {
-		fmt.Fprintf(os.Stderr, "DEBUG: ENV values was nil, initializing!\n")
 		e.values = make(map[string]interface{})
 	}
 	e.values[name] = value

@@ -166,7 +166,6 @@ func (i *Interpreter) VisitBinaryExpr(expr *Binary) interface{} {
 		}
 		return left.(float64) <= right.(float64)
 	case PLUS:
-		fmt.Fprintf(os.Stderr, "DEBUG: PLUS %v + %v\n", left, right)
 		if lStr, lOk := left.(string); lOk {
 			if rStr, rOk := right.(string); rOk {
 				return lStr + rStr
@@ -280,7 +279,6 @@ func (i *Interpreter) VisitExpressionStmt(stmt *Expression) interface{} {
 
 func (i *Interpreter) VisitPrintStmt(stmt *Print) interface{} {
 	value := i.Evaluate(stmt.Expression)
-	fmt.Fprintf(os.Stderr, "DEBUG: Print value = %v\n", value)
 	fmt.Println(i.stringify(value))
 	return value
 }
@@ -427,7 +425,6 @@ func (i *Interpreter) VisitFunctionExpr(expr *FunctionExpr) interface{} {
 		Params: expr.Params,
 		Body:   expr.Body,
 	}
-	fmt.Fprintf(os.Stderr, "DEBUG: closure for function expr: has this = %v\n", i.environment.values["this"])
 	return NewLoxFunction(function, i.environment, false)
 }
 

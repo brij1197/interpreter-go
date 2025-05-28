@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"os"
 )
 
 type LoxFunction struct {
@@ -18,7 +17,6 @@ type Function struct {
 }
 
 func NewLoxFunction(declaration *Function, closure *Environment, isInitializer bool) *LoxFunction {
-	fmt.Fprintf(os.Stderr, "DEBUG: NewLoxFunction closure env pointer=%p, Foo=%v\n", closure, closure.values["Foo"])
 	return &LoxFunction{declaration: declaration, closure: closure, isInitializer: isInitializer}
 }
 
