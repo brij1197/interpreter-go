@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"os"
 	"reflect"
 )
 
@@ -28,7 +27,8 @@ const (
 const (
 	NONE FunctionType = iota
 	FUNCTION
-	CLASS_TYPE
+	INITIALIZER
+	METHOD
 )
 
 func NewResolver(interpreter *Interpreter) *Resolver {
@@ -79,20 +79,15 @@ func (r *Resolver) define(name *Token) {
 
 }
 
-func (r *Resolver) resolveLocal(expr Expr, name *Token) {
-	// only resolve names actually declared in one of the lexically enclosing scopes
+func (r *Resolver) resolveLocal(expr Expr, name Token) {
+	// Start from innermost scope and work outward
 	for i := len(r.scopes) - 1; i >= 0; i-- {
 		if _, ok := r.scopes[i][name.Lexeme]; ok {
-			if r.inInitializer[name.Lexeme] {
-				panic(&ParseError{token: *name, message: "Can't read local variable in its own initializer."})
-			}
-			depth := len(r.scopes) - 1 - i
-			fmt.Fprintf(os.Stderr, "DEBUG: resolveLocal %s at depth %d\n", name.Lexeme, depth)
-			r.interpreter.resolve(expr, depth)
+			r.interpreter.resolve(expr, len(r.scopes)-1-i)
 			return
 		}
 	}
-	// if we never saw it in a local scope, do nothing—let the interpreter look in globals
+	// Not found in any scope - it must be global
 }
 
 func (r *Resolver) VisitBinaryExpr(expr *Binary) interface{} {
@@ -132,17 +127,19 @@ func (r *Resolver) VisitVariableStmt(stmt *Var) interface{} {
 
 func (r *Resolver) VisitVariableExpr(expr *Variable) interface{} {
 	if len(r.scopes) > 0 {
-		if initialized, ok := r.scopes[len(r.scopes)-1][expr.Name.Lexeme]; ok && !initialized {
-			panic(NewParseError(expr.Name, "Can't read local variable in its own initializer."))
+		if val, ok := r.scopes[len(r.scopes)-1][expr.Name.Lexeme]; ok {
+			if val == false {
+				panic("Can't read local variable in its own initializer.")
+			}
 		}
 	}
-	r.resolveLocal(expr, &expr.Name)
+	r.resolveLocal(expr, expr.Name)
 	return nil
 }
 
 func (r *Resolver) VisitAssignExpr(expr *Assign) interface{} {
 	r.resolveExpr(expr.Value)
-	r.resolveLocal(expr, &expr.Name)
+	r.resolveLocal(expr, expr.Name)
 	return nil
 }
 
@@ -160,29 +157,28 @@ func (r *Resolver) VisitExpressionStmt(stmt *Expression) interface{} {
 }
 
 func (r *Resolver) VisitFunctionStmt(stmt *Function) interface{} {
-	r.declare(&stmt.Name) // makes the name visible in the scope (value=nil)
-	r.define(&stmt.Name)  // assigns it as defined
-	r.resolveFunction(stmt)
+	r.declare(&stmt.Name)
+	r.define(&stmt.Name)
+	r.resolveFunction(stmt, FUNCTION)
 	return nil
 }
 
-func (r *Resolver) resolveFunction(function *Function) {
+func (r *Resolver) resolveFunction(function *Function, funcType FunctionType) {
 	enclosingFunction := r.currentFunction
-	r.currentFunction = FUNCTION
+	r.currentFunction = funcType
 
 	r.beginScope()
-
-	if r.currentClass != NO_CLASS {
-		r.scopes[len(r.scopes)-1]["this"] = true
-	}
-
 	for _, param := range function.Params {
 		r.declare(&param)
 		r.define(&param)
 	}
 
-	r.resolveStatements(function.Body)
+	if function.Body != nil {
+		r.Resolve(function.Body)
+	}
+
 	r.endScope()
+
 	r.currentFunction = enclosingFunction
 }
 
@@ -196,7 +192,6 @@ func (r *Resolver) VisitBlockStmt(stmt *Block) interface{} {
 func (r *Resolver) VisitVarStmt(stmt *Var) interface{} {
 	r.declare(&stmt.Name)
 
-	// This ensures variable is declared but not yet defined when resolving the initializer.
 	if stmt.Initializer != nil {
 		r.resolveExpr(stmt.Initializer)
 	}
@@ -298,15 +293,22 @@ func (r *Resolver) VisitClassStmt(stmt *Class) interface{} {
 	r.declare(&stmt.Name)
 	r.define(&stmt.Name)
 
-	// Do not push another scope here!
-	// Each method gets its own scope (handled in resolveFunction)
+	// Create a new scope for the class body
+	r.beginScope()
+	r.scopes[len(r.scopes)-1]["this"] = true
 
+	// Resolve all methods
 	for _, method := range stmt.Methods {
 		if function, ok := method.(*Function); ok {
-			r.resolveFunction(function)
+			declaration := METHOD
+			if function.Name.Lexeme == "init" {
+				declaration = INITIALIZER
+			}
+			r.resolveFunction(function, declaration)
 		}
 	}
 
+	r.endScope()
 	r.currentClass = enclosingClass
 	return nil
 }
@@ -324,8 +326,8 @@ func (r *Resolver) VisitSetExpr(expr *Set) interface{} {
 
 func (r *Resolver) VisitThisExpr(expr *This) interface{} {
 	if r.currentClass == NO_CLASS {
-		panic(NewParseError(expr.Keyword, "Can't use 'this' outside of a class method."))
+		panic("Cannot use 'this' outside of a class method.")
 	}
-	r.resolveLocal(expr, &expr.Keyword)
+	r.resolveLocal(expr, expr.Keyword)
 	return nil
 }

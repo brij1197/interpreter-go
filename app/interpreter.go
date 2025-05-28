@@ -166,6 +166,7 @@ func (i *Interpreter) VisitBinaryExpr(expr *Binary) interface{} {
 		}
 		return left.(float64) <= right.(float64)
 	case PLUS:
+		fmt.Fprintf(os.Stderr, "DEBUG: PLUS %v + %v\n", left, right)
 		if lStr, lOk := left.(string); lOk {
 			if rStr, rOk := right.(string); rOk {
 				return lStr + rStr
@@ -201,36 +202,21 @@ func (i *Interpreter) VisitBinaryExpr(expr *Binary) interface{} {
 func (i *Interpreter) Interpret(statements []Stmt) error {
 	defer func() {
 		if r := recover(); r != nil {
-			if _, ok := r.(ReturnValue); ok {
-				return
-			}
 			if err, ok := r.(*RuntimeError); ok {
 				fmt.Fprintf(os.Stderr, "%s\n [line %d]\n", err.message, err.token.Line)
 				os.Exit(70)
 			}
-			panic(r)
 		}
 	}()
 
 	for _, statement := range statements {
-		result := i.Execute(statement)
-		if _, ok := result.(ReturnValue); ok {
-			continue
-		}
+		i.Execute(statement)
 	}
+
 	return nil
 }
 
 func (i *Interpreter) Execute(stmt Stmt) interface{} {
-	defer func() {
-		if r := recover(); r != nil {
-			if _, ok := r.(ReturnValue); ok {
-				panic(r)
-			}
-			panic(r)
-		}
-	}()
-
 	return stmt.Accept(i)
 }
 
@@ -284,10 +270,6 @@ func (i *Interpreter) stringify(obj interface{}) string {
 		return fmt.Sprintf("%g", num)
 	}
 
-	if stringer, ok := obj.(fmt.Stringer); ok {
-		return stringer.String()
-	}
-
 	return fmt.Sprintf("%v", obj)
 }
 
@@ -298,18 +280,9 @@ func (i *Interpreter) VisitExpressionStmt(stmt *Expression) interface{} {
 
 func (i *Interpreter) VisitPrintStmt(stmt *Print) interface{} {
 	value := i.Evaluate(stmt.Expression)
-
-	if num, ok := value.(float64); ok {
-		if num == float64(int64(num)) {
-			fmt.Printf("%d\n", int64(num))
-		} else {
-			fmt.Printf("%g\n", num)
-		}
-	} else {
-		fmt.Printf("%v\n", i.stringify(value))
-	}
-
-	return nil
+	fmt.Fprintf(os.Stderr, "DEBUG: Print value = %v\n", value)
+	fmt.Println(i.stringify(value))
+	return value
 }
 
 func (i *Interpreter) VisitVariableExpr(expr *Variable) interface{} {
@@ -338,13 +311,16 @@ func (i *Interpreter) VisitBlockStmt(stmt *Block) interface{} {
 func (i *Interpreter) executeBlock(statements []Stmt, environment *Environment) interface{} {
 	previous := i.environment
 	i.environment = environment
-	defer func() { i.environment = previous }()
-	var result interface{}
+
+	defer func() {
+		i.environment = previous
+	}()
+
 	for _, statement := range statements {
-		result = i.Execute(statement)
-		// Do not try to catch ReturnValue here!
+		i.Execute(statement)
 	}
-	return result
+
+	return nil
 }
 
 func (i *Interpreter) VisitIfStmt(stmt *If) interface{} {
@@ -383,7 +359,7 @@ func (i *Interpreter) VisitWhileStmt(stmt *While) interface{} {
 func (i *Interpreter) VisitCallExpr(expr *Call) interface{} {
 	callee := i.Evaluate(expr.Callee)
 
-	arguments := make([]interface{}, 0)
+	arguments := make([]interface{}, 0, len(expr.Arguments))
 	for _, argument := range expr.Arguments {
 		arguments = append(arguments, i.Evaluate(argument))
 	}
@@ -399,10 +375,11 @@ func (i *Interpreter) VisitCallExpr(expr *Call) interface{} {
 	if len(arguments) != function.Arity() {
 		panic(&RuntimeError{
 			token:   expr.Paren,
-			message: fmt.Sprintf("Expected %d arguments but got %d", function.Arity(), len(arguments)),
+			message: fmt.Sprintf("Expected %d arguments but got %d.", function.Arity(), len(arguments)),
 		})
 	}
 
+	// This line is crucial:
 	return function.Call(i, arguments)
 }
 
@@ -417,11 +394,10 @@ func (i *Interpreter) VisitFunctionStmt(stmt *Function) interface{} {
 }
 
 func (i *Interpreter) VisitReturnStmt(stmt *ReturnStmt) interface{} {
-	var value interface{} = nil
+	var value interface{}
 	if stmt.Value != nil {
 		value = i.Evaluate(stmt.Value)
 	}
-
 	panic(&ReturnValue{Value: value})
 }
 
@@ -430,20 +406,13 @@ func (i *Interpreter) resolve(expr Expr, depth int) {
 }
 
 func (i *Interpreter) lookupVariable(name Token, expr Expr) interface{} {
-	// if we resolved it into a local slot…
 	if distance, ok := i.locals[expr]; ok {
-		// normal locals (parameters, local vars) live exactly 'distance' hops up.
-		if name.Type == THIS {
-			return i.environment.GetAt(distance+1, name.Lexeme)
-		}
-		// "this" was injected into the *parent* of the call-wrapper frame,
-		// so skip one extra level to land in the closure that actually holds it.
 		return i.environment.GetAt(distance, name.Lexeme)
 	}
-	// otherwise it’s a true global
+
 	val, err := i.globals.Get(name.Lexeme)
 	if err != nil {
-		panic(&RuntimeError{token: name, message: err.Error()})
+		panic(&RuntimeError{token: name, message: err.Error()}) // <-- must be *RuntimeError
 	}
 	return val
 }
@@ -458,27 +427,30 @@ func (i *Interpreter) VisitFunctionExpr(expr *FunctionExpr) interface{} {
 		Params: expr.Params,
 		Body:   expr.Body,
 	}
+	fmt.Fprintf(os.Stderr, "DEBUG: closure for function expr: has this = %v\n", i.environment.values["this"])
 	return NewLoxFunction(function, i.environment, false)
 }
 
 func (i *Interpreter) VisitClassStmt(stmt *Class) interface{} {
 	i.environment.Define(stmt.Name.Lexeme, nil)
-	methods := make(map[string]*LoxFunction)
 
+	methods := make(map[string]*LoxFunction)
 	for _, method := range stmt.Methods {
-		function, ok := method.(*Function)
-		if !ok {
-			continue
+		function := method.(*Function)
+		loxFunction := &LoxFunction{
+			declaration:   function,
+			closure:       i.environment,
+			isInitializer: function.Name.Lexeme == "init",
 		}
-		isInitializer := function.Name.Lexeme == "init"
-		loxFunction := NewLoxFunction(function, i.environment, isInitializer)
 		methods[function.Name.Lexeme] = loxFunction
 	}
 
-	class := NewLoxClass(stmt.Name.Lexeme, methods)
+	class := &LoxClass{
+		name:    stmt.Name.Lexeme,
+		methods: methods,
+	}
 
-	i.environment.Define(stmt.Name.Lexeme, class)
-
+	i.environment.Assign(stmt.Name, class)
 	return nil
 }
 
@@ -488,10 +460,8 @@ func (i *Interpreter) VisitGetExpr(expr *Get) interface{} {
 	if instance, ok := object.(*LoxInstance); ok {
 		return instance.Get(expr.Name)
 	}
-	panic(&RuntimeError{
-		token:   expr.Name,
-		message: "Only instances have properties.",
-	})
+
+	panic(RuntimeError{expr.Name, "Only instances have properties."})
 }
 
 func (i *Interpreter) VisitSetExpr(expr *Set) interface{} {
@@ -499,10 +469,10 @@ func (i *Interpreter) VisitSetExpr(expr *Set) interface{} {
 
 	if instance, ok := object.(*LoxInstance); ok {
 		value := i.Evaluate(expr.Value)
+		// Don't try to rewrite value here!
 		instance.Set(expr.Name, value)
 		return value
 	}
-
 	panic(&RuntimeError{
 		token:   expr.Name,
 		message: "Only instances have fields.",
@@ -510,7 +480,5 @@ func (i *Interpreter) VisitSetExpr(expr *Set) interface{} {
 }
 
 func (i *Interpreter) VisitThisExpr(expr *This) interface{} {
-	val := i.lookupVariable(expr.Keyword, expr)
-	fmt.Fprintf(os.Stderr, "DEBUG: this resolved to %v\n", val)
-	return val
+	return i.lookupVariable(expr.Keyword, expr)
 }

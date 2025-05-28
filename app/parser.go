@@ -5,8 +5,9 @@ import (
 )
 
 type Parser struct {
-	tokens  []Token
-	current int
+	tokens           []Token
+	current          int
+	currentClassName *Token
 }
 
 func NewParser(tokens []Token) *Parser {
@@ -324,7 +325,11 @@ func (p *Parser) primary() (Expr, error) {
 		return &Literal{Value: p.previous().Literal}, nil
 	}
 	if p.match(IDENTIFIER) {
-		return &Variable{Name: p.previous()}, nil
+		token := p.previous()
+		if p.currentClassName != nil && token.Lexeme == p.currentClassName.Lexeme {
+			token = *p.currentClassName
+		}
+		return &Variable{Name: token}, nil
 	}
 	if p.match(LEFT_PAREN) {
 		expr, err := p.expression()
@@ -697,6 +702,9 @@ func (p *Parser) classDeclaration() (Stmt, error) {
 		return nil, err
 	}
 
+	previousClass := p.currentClassName
+	p.currentClassName = name
+
 	_, err = p.consume(LEFT_BRACE, "Expect '{' before class body.")
 	if err != nil {
 		return nil, err
@@ -715,6 +723,8 @@ func (p *Parser) classDeclaration() (Stmt, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	p.currentClassName = previousClass
 
 	return &Class{Name: *name, Methods: methods}, nil
 }

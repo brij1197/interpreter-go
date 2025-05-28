@@ -22,13 +22,12 @@ func (e *Environment) Define(name string, value interface{}) {
 		fmt.Fprintf(os.Stderr, "DEBUG: ENV values was nil, initializing!\n")
 		e.values = make(map[string]interface{})
 	}
-	fmt.Fprintf(os.Stderr, "DEBUG: Define %s = %v in env %p\n", name, value, e)
 	e.values[name] = value
 }
 
 func (e *Environment) Get(name string) (interface{}, error) {
-	if value, ok := e.values[name]; ok {
-		return value, nil
+	if val, ok := e.values[name]; ok {
+		return val, nil
 	}
 
 	if e.enclosing != nil {
@@ -43,16 +42,9 @@ func (e *Environment) Assign(name Token, value interface{}) error {
 		e.values[name.Lexeme] = value
 		return nil
 	}
-
 	if e.enclosing != nil {
 		return e.enclosing.Assign(name, value)
 	}
-
-	if e.enclosing == nil {
-		e.values[name.Lexeme] = value
-		return nil
-	}
-
 	return &RuntimeError{
 		token:   name,
 		message: fmt.Sprintf("Undefined variable '%s'.", name.Lexeme),
@@ -66,10 +58,6 @@ func (e *Environment) GetAt(distance int, name string) interface{} {
 func (e *Environment) ancestor(distance int) *Environment {
 	environment := e
 	for i := 0; i < distance; i++ {
-		if environment.enclosing == nil {
-			fmt.Fprintf(os.Stderr, "DEBUG: Missing enclosing environment at depth %d\n", i)
-			break
-		}
 		environment = environment.enclosing
 	}
 	return environment

@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"os"
 )
 
 type LoxInstance struct {
@@ -23,17 +22,13 @@ func (i *LoxInstance) String() string {
 	return fmt.Sprintf("%s instance", i.class.name)
 }
 
-func (instance *LoxInstance) Get(name Token) interface{} {
-	// Check fields first
-	if value, ok := instance.fields[name.Lexeme]; ok {
-		fmt.Fprintf(os.Stderr, "DEBUG: Get field %s = %v\n", name.Lexeme, value)
+func (i *LoxInstance) Get(name Token) interface{} {
+	if value, ok := i.fields[name.Lexeme]; ok {
 		return value
 	}
 
-	// Then check methods
-	if method := instance.class.FindMethod(name.Lexeme); method != nil {
-		// If it's a method, bind 'this' to the instance
-		return method.Bind(instance)
+	if method := i.class.methods[name.Lexeme]; method != nil {
+		return method.Bind(i)
 	}
 
 	panic(&RuntimeError{

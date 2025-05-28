@@ -22,7 +22,7 @@ func (c *LoxClass) FindMethod(name string) *LoxFunction {
 
 func (c *LoxClass) Call(interpreter *Interpreter, arguments []interface{}) interface{} {
 	instance := NewLoxInstance(c)
-	if initializer := c.FindMethod("init"); initializer != nil {
+	if initializer, ok := c.methods["init"]; ok {
 		initializer.Bind(instance).Call(interpreter, arguments)
 	}
 	return instance

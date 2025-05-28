@@ -64,9 +64,8 @@ func runProgram(source string) error {
 			if parseErr, ok := r.(*ParseError); ok {
 				fmt.Fprintln(os.Stderr, parseErr.Error())
 				os.Exit(65)
-			} else {
-				panic(r)
 			}
+			os.Exit(65)
 		}
 	}()
 

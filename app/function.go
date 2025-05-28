@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 )
 
 type LoxFunction struct {
@@ -17,41 +18,30 @@ type Function struct {
 }
 
 func NewLoxFunction(declaration *Function, closure *Environment, isInitializer bool) *LoxFunction {
-	return &LoxFunction{
-		declaration:   declaration,
-		closure:       closure,
-		isInitializer: isInitializer,
-	}
+	fmt.Fprintf(os.Stderr, "DEBUG: NewLoxFunction closure env pointer=%p, Foo=%v\n", closure, closure.values["Foo"])
+	return &LoxFunction{declaration: declaration, closure: closure, isInitializer: isInitializer}
 }
 
-func (f *LoxFunction) Call(interpreter *Interpreter, arguments []interface{}) (ret interface{}) {
-	newEnv := NewEnvironment(f.closure)
-	for i, param := range f.declaration.Params {
-		newEnv.Define(param.Lexeme, arguments[i])
+func (f *LoxFunction) Call(interpreter *Interpreter, arguments []interface{}) (result interface{}) {
+	environment := NewEnvironment(f.closure)
+	for i := 0; i < len(f.declaration.Params); i++ {
+		environment.Define(f.declaration.Params[i].Lexeme, arguments[i])
 	}
-
-	prev := interpreter.environment
-	interpreter.environment = newEnv
-	defer func() { interpreter.environment = prev }()
 
 	defer func() {
 		if r := recover(); r != nil {
-			if retVal, ok := r.(*ReturnValue); ok {
-				ret = retVal.Value
+			if ret, ok := r.(*ReturnValue); ok {
+				result = ret.Value
 			} else {
 				panic(r)
 			}
 		}
 	}()
 
-	// Don't use executeBlock here!
-	for _, stmt := range f.declaration.Body {
-		ret = interpreter.Execute(stmt)
-	}
+	interpreter.executeBlock(f.declaration.Body, environment)
 
 	if f.isInitializer {
-		thisVal, _ := newEnv.Get("this")
-		return thisVal
+		result = f.closure.GetAt(0, "this")
 	}
 	return
 }
@@ -65,7 +55,11 @@ func (f *LoxFunction) Arity() int {
 }
 
 func (f *LoxFunction) Bind(instance *LoxInstance) *LoxFunction {
-	env := NewEnvironment(f.closure)
-	env.Define("this", instance)
-	return NewLoxFunction(f.declaration, env, f.isInitializer)
+	environment := NewEnvironment(f.closure)
+	environment.Define("this", instance)
+	return &LoxFunction{
+		declaration:   f.declaration,
+		closure:       environment,
+		isInitializer: f.isInitializer,
+	}
 }
