@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"reflect"
 )
 
@@ -43,10 +44,12 @@ func NewResolver(interpreter *Interpreter) *Resolver {
 }
 
 func (r *Resolver) beginScope() {
+	//fmt.Println("BEGIN SCOPE", len(r.scopes))
 	r.scopes = append(r.scopes, make(map[string]bool))
 }
 
 func (r *Resolver) endScope() {
+	//fmt.Println("END SCOPE", len(r.scopes)-1)
 	if len(r.scopes) > 0 {
 		r.scopes = r.scopes[:len(r.scopes)-1]
 	}
@@ -56,6 +59,7 @@ func (r *Resolver) declare(name *Token) {
 	if len(r.scopes) == 0 {
 		return
 	}
+	//fmt.Printf("DECLARE %s in scope %d\n", name.Lexeme, len(r.scopes)-1)
 	scope := r.scopes[len(r.scopes)-1]
 	if _, exists := scope[name.Lexeme]; exists {
 		panic(
@@ -73,19 +77,22 @@ func (r *Resolver) define(name *Token) {
 	if len(r.scopes) == 0 {
 		return
 	}
+	//fmt.Printf("DEFINE %s in scope %d\n", name.Lexeme, len(r.scopes)-1)
 	scope := r.scopes[len(r.scopes)-1]
 	scope[name.Lexeme] = true
 	delete(r.inInitializer, name.Lexeme)
-
 }
 
 func (r *Resolver) resolveLocal(expr Expr, name Token) {
 	for i := len(r.scopes) - 1; i >= 0; i-- {
 		if _, ok := r.scopes[i][name.Lexeme]; ok {
 			r.interpreter.resolve(expr, len(r.scopes)-1-i)
+			// Correct debug:
+			fmt.Fprintf(os.Stderr, "Resolved %s at distance %d\n", name.Lexeme, len(r.scopes)-1-i)
 			return
 		}
 	}
+	fmt.Fprintf(os.Stderr, "Did NOT resolve %s\n", name.Lexeme)
 }
 
 func (r *Resolver) VisitBinaryExpr(expr *Binary) interface{} {
@@ -114,21 +121,21 @@ func (r *Resolver) VisitUnaryExpr(expr *Unary) interface{} {
 	return nil
 }
 
-func (r *Resolver) VisitVariableStmt(stmt *Var) interface{} {
+func (r *Resolver) VisitVarStmt(stmt *Var) interface{} {
 	r.declare(&stmt.Name)
+
 	if stmt.Initializer != nil {
 		r.resolveExpr(stmt.Initializer)
 	}
+
 	r.define(&stmt.Name)
 	return nil
 }
 
 func (r *Resolver) VisitVariableExpr(expr *Variable) interface{} {
 	if len(r.scopes) > 0 {
-		if val, ok := r.scopes[len(r.scopes)-1][expr.Name.Lexeme]; ok {
-			if val == false {
-				panic("Can't read local variable in its own initializer.")
-			}
+		if val, ok := r.scopes[len(r.scopes)-1][expr.Name.Lexeme]; ok && !val {
+			panic("Can't read local variable in its own initializer.")
 		}
 	}
 	r.resolveLocal(expr, expr.Name)
@@ -184,17 +191,6 @@ func (r *Resolver) VisitBlockStmt(stmt *Block) interface{} {
 	r.beginScope()
 	r.Resolve(stmt.Statements)
 	r.endScope()
-	return nil
-}
-
-func (r *Resolver) VisitVarStmt(stmt *Var) interface{} {
-	r.declare(&stmt.Name)
-
-	if stmt.Initializer != nil {
-		r.resolveExpr(stmt.Initializer)
-	}
-
-	r.define(&stmt.Name)
 	return nil
 }
 
@@ -293,9 +289,15 @@ func (r *Resolver) VisitClassStmt(stmt *Class) interface{} {
 	r.declare(&stmt.Name)
 	r.define(&stmt.Name)
 
+	// do not beginScope/endScope here!
 	if stmt.Superclass != nil {
-		r.resolveExpr(stmt.Superclass)
+		if superVar, ok := stmt.Superclass.(*Variable); ok {
+			if stmt.Name.Lexeme == superVar.Name.Lexeme {
+				panic(fmt.Errorf("A class can't inherit from itself."))
+			}
+		}
 	}
+
 	r.beginScope()
 	r.scopes[len(r.scopes)-1]["this"] = true
 

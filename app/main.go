@@ -163,6 +163,8 @@ func runEvaluate(source string) {
 			panic(r)
 		}
 	}()
+	fmt.Fprintf(os.Stderr, "Global keys: %v\n", interpreter.globals.values)
+
 	result := interpreter.Evaluate(expression)
 	fmt.Println(interpreter.stringify(result))
 }

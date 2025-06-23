@@ -43,11 +43,8 @@ func (i *Interpreter) VisitVarStmt(stmt *Var) interface{} {
 	if stmt.Initializer != nil {
 		value = i.Evaluate(stmt.Initializer)
 	}
-	if i.environment == i.globals {
-		i.globals.Define(stmt.Name.Lexeme, value)
-	} else {
-		i.environment.Define(stmt.Name.Lexeme, value)
-	}
+	fmt.Fprintf(os.Stderr, "Defining %s in environment %p (parent %p)\n", stmt.Name.Lexeme, i.environment, i.environment.enclosing)
+	i.environment.Define(stmt.Name.Lexeme, value)
 	return nil
 }
 
@@ -307,6 +304,7 @@ func (i *Interpreter) VisitBlockStmt(stmt *Block) interface{} {
 }
 
 func (i *Interpreter) executeBlock(statements []Stmt, environment *Environment) interface{} {
+	fmt.Fprintf(os.Stderr, "Entering block. Env: %p, Parent: %p, Keys: %v\n", i.environment, i.environment.enclosing, i.environment.values)
 	previous := i.environment
 	i.environment = environment
 
@@ -317,6 +315,7 @@ func (i *Interpreter) executeBlock(statements []Stmt, environment *Environment) 
 	for _, statement := range statements {
 		i.Execute(statement)
 	}
+	fmt.Fprintf(os.Stderr, "Leaving block. Env: %p\n", i.environment)
 
 	return nil
 }
@@ -402,10 +401,11 @@ func (i *Interpreter) resolve(expr Expr, depth int) {
 }
 
 func (i *Interpreter) lookupVariable(name Token, expr Expr) interface{} {
+	fmt.Fprintf(os.Stderr, "Looking up %s in env %p (parent %p), keys: %v\n", name.Lexeme, i.environment, i.environment.enclosing, i.environment.values)
+
 	if distance, ok := i.locals[expr]; ok {
 		return i.environment.GetAt(distance, name.Lexeme)
 	}
-
 	val, err := i.globals.Get(name.Lexeme)
 	if err != nil {
 		panic(&RuntimeError{token: name, message: err.Error()})
@@ -427,17 +427,19 @@ func (i *Interpreter) VisitFunctionExpr(expr *FunctionExpr) interface{} {
 }
 
 func (i *Interpreter) VisitClassStmt(stmt *Class) interface{} {
-	var superclass *LoxClass
-	if stmt.Superclass != nil {
-		superclassVal := i.Evaluate(stmt.Superclass)
-		if sc, ok := superclassVal.(*LoxClass); ok {
-			superclass = sc
-		} else {
-			panic(RuntimeError{stmt.Name, "Superclass must be a class."})
-		}
-	}
+	fmt.Fprintf(os.Stderr, "Defining class %s in env %p (parent %p), keys: %v\n", stmt.Name.Lexeme, i.environment, i.environment.enclosing, i.environment.values)
 
 	i.environment.Define(stmt.Name.Lexeme, nil)
+
+	var superclass *LoxClass = nil
+	if stmt.Superclass != nil {
+		value := i.Evaluate(stmt.Superclass)
+		var ok bool
+		superclass, ok = value.(*LoxClass)
+		if !ok {
+			panic(&RuntimeError{stmt.Name, "Superclass must be a class."})
+		}
+	}
 
 	methods := make(map[string]*LoxFunction)
 	for _, method := range stmt.Methods {
