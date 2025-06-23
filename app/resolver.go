@@ -289,13 +289,13 @@ func (r *Resolver) VisitClassStmt(stmt *Class) interface{} {
 	r.declare(&stmt.Name)
 	r.define(&stmt.Name)
 
-	// do not beginScope/endScope here!
 	if stmt.Superclass != nil {
 		if superVar, ok := stmt.Superclass.(*Variable); ok {
 			if stmt.Name.Lexeme == superVar.Name.Lexeme {
 				panic(fmt.Errorf("A class can't inherit from itself."))
 			}
 		}
+		r.resolveExpr(stmt.Superclass)
 	}
 
 	r.beginScope()
