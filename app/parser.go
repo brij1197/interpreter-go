@@ -345,6 +345,18 @@ func (p *Parser) primary() (Expr, error) {
 	if p.match(THIS) {
 		return &This{Keyword: p.previous()}, nil
 	}
+	if p.match(SUPER) {
+		keyword := p.previous()
+		_, err := p.consume(DOT, "Expect '.' after 'super'.")
+		if err != nil {
+			return nil, err
+		}
+		method, err := p.consume(IDENTIFIER, "Expect superclass method name.")
+		if err != nil {
+			return nil, err
+		}
+		return &Super{Keyword: keyword, Method: *method}, nil
+	}
 
 	return nil, fmt.Errorf("Expect expression.")
 }

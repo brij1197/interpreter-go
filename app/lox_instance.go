@@ -30,7 +30,10 @@ func (instance *LoxInstance) Get(name Token) interface{} {
 	if method != nil {
 		return method.Bind(instance)
 	}
-	panic(&RuntimeError{name, "Undefined property '" + name.Lexeme + "'."})
+	panic(&RuntimeError{
+		token:   name,
+		message: fmt.Sprintf("Undefined property '%s'.", name.Lexeme),
+	})
 
 }
 

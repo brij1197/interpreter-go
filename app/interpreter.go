@@ -426,10 +426,53 @@ func (i *Interpreter) VisitFunctionExpr(expr *FunctionExpr) interface{} {
 	return NewLoxFunction(function, i.environment, false)
 }
 
+// func (i *Interpreter) VisitClassStmt(stmt *Class) interface{} {
+// 	fmt.Fprintf(os.Stderr, "Defining class %s in env %p (parent %p), keys: %v\n", stmt.Name.Lexeme, i.environment, i.environment.enclosing, i.environment.values)
+
+// 	i.environment.Define(stmt.Name.Lexeme, nil)
+
+// 	var superclass *LoxClass = nil
+// 	if stmt.Superclass != nil {
+// 		value := i.Evaluate(stmt.Superclass)
+// 		var ok bool
+// 		superclass, ok = value.(*LoxClass)
+// 		if !ok {
+// 			panic(&RuntimeError{stmt.Name, "Superclass must be a class."})
+// 		}
+// 		i.environment = NewEnvironment(i.environment)
+// 		i.environment.Define("super", superclass)
+// 	}
+// 	i.environment = NewEnvironment(i.environment)
+// 	i.environment.Define("this", nil)
+
+// 	methods := make(map[string]*LoxFunction)
+// 	for _, method := range stmt.Methods {
+// 		function := method.(*Function)
+// 		isInitializer := function.Name.Lexeme == "init"
+// 		methods[function.Name.Lexeme] = &LoxFunction{
+// 			declaration:   function,
+// 			closure:       i.environment,
+// 			isInitializer: isInitializer,
+// 		}
+// 	}
+
+// 	class := &LoxClass{
+// 		name:       stmt.Name.Lexeme,
+// 		superclass: superclass,
+// 		methods:    methods,
+// 	}
+
+// 	i.environment = i.environment.enclosing
+// 	if stmt.Superclass != nil {
+// 		i.environment = i.environment.enclosing
+// 	}
+
+// 	i.environment.Assign(stmt.Name, class)
+// 	return nil
+// }
+
 func (i *Interpreter) VisitClassStmt(stmt *Class) interface{} {
 	fmt.Fprintf(os.Stderr, "Defining class %s in env %p (parent %p), keys: %v\n", stmt.Name.Lexeme, i.environment, i.environment.enclosing, i.environment.values)
-
-	i.environment.Define(stmt.Name.Lexeme, nil)
 
 	var superclass *LoxClass = nil
 	if stmt.Superclass != nil {
@@ -439,6 +482,13 @@ func (i *Interpreter) VisitClassStmt(stmt *Class) interface{} {
 		if !ok {
 			panic(&RuntimeError{stmt.Name, "Superclass must be a class."})
 		}
+	}
+
+	i.environment.Define(stmt.Name.Lexeme, nil)
+
+	if stmt.Superclass != nil {
+		i.environment = NewEnvironment(i.environment)
+		i.environment.Define("super", superclass)
 	}
 
 	methods := make(map[string]*LoxFunction)
@@ -456,6 +506,10 @@ func (i *Interpreter) VisitClassStmt(stmt *Class) interface{} {
 		name:       stmt.Name.Lexeme,
 		superclass: superclass,
 		methods:    methods,
+	}
+
+	if stmt.Superclass != nil {
+		i.environment = i.environment.enclosing
 	}
 
 	i.environment.Assign(stmt.Name, class)
@@ -487,4 +541,18 @@ func (i *Interpreter) VisitSetExpr(expr *Set) interface{} {
 
 func (i *Interpreter) VisitThisExpr(expr *This) interface{} {
 	return i.lookupVariable(expr.Keyword, expr)
+}
+
+func (i *Interpreter) VisitSuperExpr(expr *Super) interface{} {
+	distance := i.locals[expr]
+	superclass := i.environment.GetAt(distance, "super").(*LoxClass)
+	object := i.environment.GetAt(distance-1, "this").(*LoxInstance)
+	method := superclass.FindMethod(expr.Method.Lexeme)
+	if method == nil {
+		panic(&RuntimeError{
+			token:   expr.Method,
+			message: fmt.Sprintf("Undefined property '%s'.", expr.Method.Lexeme),
+		})
+	}
+	return method.Bind(object)
 }

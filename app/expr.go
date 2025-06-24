@@ -65,6 +65,11 @@ type This struct {
 	Keyword Token
 }
 
+type Super struct {
+	Keyword Token
+	Method  Token
+}
+
 type ExprVisitor interface {
 	VisitBinaryExpr(expr *Binary) interface{}
 	VisitLiteralExpr(expr *Literal) interface{}
@@ -78,6 +83,7 @@ type ExprVisitor interface {
 	VisitGetExpr(expr *Get) interface{}
 	VisitSetExpr(expr *Set) interface{}
 	VisitThisExpr(expr *This) interface{}
+	VisitSuperExpr(expr *Super) interface{}
 }
 
 func (b *Binary) Accept(visitor ExprVisitor) interface{} {
@@ -126,4 +132,8 @@ func (s *Set) Accept(visitor ExprVisitor) interface{} {
 
 func (t *This) Accept(visitor ExprVisitor) interface{} {
 	return visitor.VisitThisExpr(t)
+}
+
+func (s *Super) Accept(visitor ExprVisitor) interface{} {
+	return visitor.VisitSuperExpr(s)
 }

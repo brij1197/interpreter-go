@@ -111,3 +111,7 @@ func (a *AstPrinter) VisitSetExpr(expr *Set) interface{} {
 func (a *AstPrinter) VisitThisExpr(expr *This) interface{} {
 	return "this"
 }
+
+func (a *AstPrinter) VisitSuperExpr(expr *Super) interface{} {
+	return fmt.Sprintf("super.%s", expr.Method.Lexeme)
+}
