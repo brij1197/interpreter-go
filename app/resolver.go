@@ -44,12 +44,10 @@ func NewResolver(interpreter *Interpreter) *Resolver {
 }
 
 func (r *Resolver) beginScope() {
-	//fmt.Println("BEGIN SCOPE", len(r.scopes))
 	r.scopes = append(r.scopes, make(map[string]bool))
 }
 
 func (r *Resolver) endScope() {
-	//fmt.Println("END SCOPE", len(r.scopes)-1)
 	if len(r.scopes) > 0 {
 		r.scopes = r.scopes[:len(r.scopes)-1]
 	}
@@ -59,7 +57,6 @@ func (r *Resolver) declare(name *Token) {
 	if len(r.scopes) == 0 {
 		return
 	}
-	//fmt.Printf("DECLARE %s in scope %d\n", name.Lexeme, len(r.scopes)-1)
 	scope := r.scopes[len(r.scopes)-1]
 	if _, exists := scope[name.Lexeme]; exists {
 		panic(
@@ -77,7 +74,6 @@ func (r *Resolver) define(name *Token) {
 	if len(r.scopes) == 0 {
 		return
 	}
-	//fmt.Printf("DEFINE %s in scope %d\n", name.Lexeme, len(r.scopes)-1)
 	scope := r.scopes[len(r.scopes)-1]
 	scope[name.Lexeme] = true
 	delete(r.inInitializer, name.Lexeme)
@@ -87,7 +83,6 @@ func (r *Resolver) resolveLocal(expr Expr, name Token) {
 	for i := len(r.scopes) - 1; i >= 0; i-- {
 		if _, ok := r.scopes[i][name.Lexeme]; ok {
 			r.interpreter.resolve(expr, len(r.scopes)-1-i)
-			// Correct debug:
 			fmt.Fprintf(os.Stderr, "Resolved %s at distance %d\n", name.Lexeme, len(r.scopes)-1-i)
 			return
 		}
@@ -210,7 +205,7 @@ func (r *Resolver) VisitPrintStmt(stmt *Print) interface{} {
 
 func (r *Resolver) VisitReturnStmt(stmt *ReturnStmt) interface{} {
 	if r.currentFunction == NONE {
-		panic(fmt.Errorf("Can't return from top-level code."))
+		panic(fmt.Errorf("Can't return from top-level code"))
 	}
 	if r.currentFunction == INITIALIZER && stmt.Value != nil {
 		panic(fmt.Errorf("[line %d] Error at 'return': Can't return a value from an initializer.", stmt.Keyword.Line))
