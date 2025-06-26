@@ -18,6 +18,6 @@ jobs:
     
     - name: Deploy to Railway
       run: |
-        railway up
+        railway up --service interpreter-go
       env:
         RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
