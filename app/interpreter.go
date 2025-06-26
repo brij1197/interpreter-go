@@ -167,6 +167,10 @@ func (i *Interpreter) VisitBinaryExpr(expr *Binary) interface{} {
 			if rStr, rOk := right.(string); rOk {
 				return lStr + rStr
 			}
+			return lStr + i.stringify(right)
+		}
+		if rStr, rOk := right.(string); rOk {
+			return i.stringify(left) + rStr
 		}
 		if lNum, lOk := left.(float64); lOk {
 			if rNum, rOk := right.(float64); rOk {

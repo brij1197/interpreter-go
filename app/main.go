@@ -2,18 +2,33 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"net/http"
 	"os"
 )
 
 func main() {
 	fmt.Fprintln(os.Stderr, "Logs from your program will appear here!")
 
-	if len(os.Args) < 3 {
-		fmt.Fprintln(os.Stderr, "Usage: ./your_program.sh tokenize <filename>")
+	if len(os.Args) < 2 {
+		fmt.Fprintln(os.Stderr, "Usage: ./your_program.sh <command> [filename]")
 		os.Exit(1)
 	}
 
 	command := os.Args[1]
+
+	if command == "web" {
+		fmt.Println("Starting Lox web server on http://localhost:8080")
+		http.HandleFunc("/api/interpret", handleInterpret)
+		http.HandleFunc("/", serveStatic)
+		log.Fatal(http.ListenAndServe(":8080", nil))
+	}
+
+	if len(os.Args) < 3 {
+		fmt.Fprintln(os.Stderr, "Usage: ./your_program.sh <command> <filename>")
+		os.Exit(1)
+	}
+
 	filename := os.Args[2]
 
 	bytes, err := os.ReadFile(filename)

@@ -1,0 +1,6 @@
+var name = "World";
+var number = 42;
+var isTrue = true;
+
+print "Hello, " + name + "!";
+print number * 2;

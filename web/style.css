@@ -1,0 +1,80 @@
+body { 
+    margin: 0; 
+    font-family: 'Courier New', monospace; 
+    background: #1e1e1e; 
+    color: #fff; 
+}
+
+.container { 
+    display: flex; 
+    height: 100vh; 
+}
+
+.editor-panel, .output-panel { 
+    flex: 1; 
+    display: flex; 
+    flex-direction: column; 
+}
+
+.panel-header { 
+    background: #333; 
+    padding: 10px; 
+    border-bottom: 1px solid #555; 
+}
+
+.editor, .output { 
+    flex: 1; 
+    padding: 15px; 
+    font-family: 'Courier New', monospace; 
+    font-size: 14px; 
+}
+
+.editor { 
+    background: #2d2d2d; 
+    color: #fff; 
+    border: none; 
+    resize: none; 
+    outline: none; 
+}
+
+.output { 
+    background: #1e1e1e; 
+    color: #00ff00; 
+    overflow-y: auto; 
+    white-space: pre-wrap; 
+}
+
+.controls { 
+    padding: 10px; 
+    background: #333; 
+}
+
+button { 
+    background: #007acc; 
+    color: white; 
+    border: none; 
+    padding: 8px 16px; 
+    margin-right: 10px; 
+    cursor: pointer; 
+    border-radius: 4px; 
+}
+
+button:hover { 
+    background: #005a9e; 
+}
+
+.error { 
+    color: #ff6b6b; 
+}
+
+.examples { 
+    background: #333; 
+    padding: 10px; 
+}
+
+select { 
+    background: #2d2d2d; 
+    color: white; 
+    border: 1px solid #555; 
+    padding: 5px; 
+}

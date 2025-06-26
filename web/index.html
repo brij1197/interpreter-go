@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Lox Interpreter Playgroound</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="editor-panel">
+            <div class="panel-header">
+                <h3>Lox Code Editor</h3>
+            </div>
+            <div class="examples">
+                <label>Examples: </label>
+                <select onchange="loadExample(this.value)">
+                    <option value="">Select an example...</option>
+                    <option value="hello">Hello World</option>
+                    <option value="variables">Variables</option>
+                    <option value="functions">Functions</option>
+                    <option value="classes">Classes</option>
+                    <option value="inheritance">Inheritance</option>
+                </select>
+            </div>
+            <textarea class="editor" id="code" placeholder="Enter your Lox code here...">var name = "World";
+print "Hello, " + name + "!";</textarea>
+            <div class="controls">
+                <button onclick="runCode()">Run Code</button>
+                <button onclick="clearEditor()">Clear</button>
+                <input type="file" id="fileInput" accept=".lox" style="display: none;" onchange="loadFile(event)">
+                <button onclick="document.getElementById('fileInput').click()">Upload File</button>
+                <button onclick="downloadOutput()">Download Output</button>
+            </div>
+        </div>
+        <div class="output-panel">
+            <div class="panel-header">
+                <h3>Output</h3>
+            </div>
+            <div class="output" id="output">
+                Ready to run Lox code...
+            </div>
+        </div>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
