@@ -18,10 +18,15 @@ func main() {
 	command := os.Args[1]
 
 	if command == "web" {
-		fmt.Println("Starting Lox web server on http://localhost:8080")
+		port := os.Getenv("PORT")
+		if port == "" {
+			port = "8080"
+		}
+		fmt.Printf("Starting Lox web server on port %s\n", port)
 		http.HandleFunc("/api/interpret", handleInterpret)
 		http.HandleFunc("/", serveStatic)
-		log.Fatal(http.ListenAndServe(":8080", nil))
+		log.Fatal(http.ListenAndServe(":"+port, nil))
+		return
 	}
 
 	if len(os.Args) < 3 {
