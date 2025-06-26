@@ -2,6 +2,38 @@
 
 A Go implementation of the Lox programming language interpreter from Robert Nystrom's "Crafting Interpreters" book.
 
+## Try the Web Version
+**Online Playground**: [https://interpreter-go-production.up.railway.app](https://interpreter-go-production.up.railway.app)
+
+For a browser-based experience with syntax highlighting and examples, check out the web version on the `dev` branch.
+
+## Branches
+
+- **`master`** - Terminal/CLI version for local use
+- **`dev`** - Web interface version with online playground
+
+## Usage
+
+### Terminal Version (this branch)
+```bash
+# Run a Lox file
+./your_program.sh run script.lox
+
+# Other commands
+./your_program.sh tokenize script.lox
+./your_program.sh parse script.lox
+./your_program.sh evaluate script.lox
+```
+
+### Build and Run
+```bash
+# Build the interpreter
+go build -o lox-interpreter app/*.go
+
+# Run directly
+./lox-interpreter run script.lox
+```
+
 ## Features
 
 - **Variables and Scoping**: Local and global variable declarations with lexical scoping
@@ -13,16 +45,6 @@ A Go implementation of the Lox programming language interpreter from Robert Nyst
 - **Methods**: Instance methods with `this` binding
 - **Inheritance**: Class inheritance with `super` keyword support
 
-## Usage
-
-```bash
-# Run a Lox file
-./your_program.sh run script.lox
-
-# Start REPL mode
-./your_program.sh prompt
-```
-
 ## Language Examples
 
 ### Variables and Basic Operations
@@ -32,7 +54,8 @@ var number = 42;
 var isTrue = true;
 
 print "Hello, " + name + "!";
-print number * 2;
+print "Age: " + number;
+print "Student: " + isTrue;
 ```
 
 ### Control Flow
@@ -139,3 +162,8 @@ The interpreter follows a tree-walking approach with these main components:
 - **Interpreter**: Executes the AST with environment-based variable storage
 
 Key features include lexical scoping, first-class functions with closures, and a complete object system with inheritance.
+
+## Development
+
+- **Terminal version** on `master` branch for local development and testing
+- **Web version** available on `dev` branch with auto-deployment to Railway
