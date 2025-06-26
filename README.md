@@ -15,27 +15,7 @@ Try the Lox interpreter directly in your browser with syntax highlighting, examp
 ## Usage
 
 ### Web Version (this branch)
-Visit the live demo above or run locally:
-```bash
-go run app/*.go web
-# Open http://localhost:8080
-```
-
-### Terminal Version (master branch)
-```bash
-git checkout master
-
-# Run a Lox file
-./your_program.sh run script.lox
-
-# Start REPL mode
-./your_program.sh prompt
-
-# Other commands
-./your_program.sh tokenize script.lox
-./your_program.sh parse script.lox
-./your_program.sh evaluate script.lox
-```
+Visit the live demo above
 
 ## Features
 
