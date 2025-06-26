@@ -5,8 +5,6 @@ A Go implementation of the Lox programming language interpreter from Robert Nyst
 ## Try the Web Version
 **Online Playground**: [https://interpreter-go-production.up.railway.app](https://interpreter-go-production.up.railway.app)
 
-For a browser-based experience with syntax highlighting and examples, check out the web version on the `dev` branch.
-
 ## Branches
 
 - **`master`** - Terminal/CLI version for local use
